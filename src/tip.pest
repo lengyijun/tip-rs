@@ -1,0 +1,80 @@
+// speical rule in pest
+// https://pest.rs/book/grammars/syntax.html#silent-and-atomic-rules
+WHITESPACE = _{ " " | "\t" | NEWLINE }
+block_comment = _{ "/*" ~ (block_comment | !"*/" ~ ANY)* ~ "*/" }
+COMMENT    = _{ block_comment | ("//" ~ (!NEWLINE~ ANY)*) }
+
+// name of function
+// can't begin with digit
+id= @{ ASCII_ALPHA  ~ (ASCII_ALPHANUMERIC|"_")* }
+ids= { (id ~ ("," ~ id) * )? }
+
+directFieldWrite={ id ~ "." ~ id }
+indirectFieldWrite={"(" ~ expression ~ ")" ~ "." ~ id}
+derefWrite={ "*" ~ expression}
+assignableExpression={id | directFieldWrite | indirectFieldWrite | derefWrite}
+
+var = { ("var" ~ ids ~ ";")* }
+return_expr = { "return" ~ expression ~ ";"}
+output = { "output" ~ expression ~ ";"}
+error  = { "error" ~ expression ~ ";"}
+assign = { assignableExpression ~ "=" ~ expression ~ ";"}
+
+if_expr = {"if" ~ "(" ~ expression ~ ")" ~ statement ~ ("else" ~ statement)?}
+while_expr = {"while" ~ "(" ~ expression ~ ")" ~ statement }
+block={ "{" ~ statements ~ "}" }
+
+statement={ output | error | assign | if_expr | while_expr | block }
+
+// TODO statmements={statement+} ?
+statements={statement*}
+
+function = {
+  id
+  ~ "("
+  ~ ids
+  ~ ")"
+  ~ "{"
+  ~ var
+  ~ statements
+  ~ return_expr
+  ~ "}"
+}
+
+program={SOI ~ function* ~ EOI}
+
+atom = {
+  funApp |
+  number |
+  parens |
+  pointersExpression |
+  "input" |
+  id |
+  record
+}
+
+field ={id ~ ":" ~ expression}
+// struct
+record = {"{" ~ field ~ ("," ~ field)*~ "}"}
+
+alloc={"alloc" ~ expression}
+
+ref_expr ={"&" ~ id}
+deref={"*" ~ atom}
+pointersExpression={"null"| alloc |ref_expr |deref}
+
+number=@{"-"? ~ ASCII_DIGIT+}
+
+parens={ "(" ~ expression ~ ")" }
+
+funApp={ (id| parens) ~  expressions }
+
+access={(id|deref|parens) ~ ("." ~ id)+}
+
+term={access |(atom ~ (("*"|"/") ~ term)?)  }
+
+operation={term ~ (("+"|"-") ~ expression)? }
+
+expression={operation ~ ((">"| "==") ~ operation)? }
+
+expressions={"(" ~ ")" | "(" ~ expression ~ ("," ~ expression)* ~ ")" }
