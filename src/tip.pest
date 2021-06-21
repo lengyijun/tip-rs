@@ -1,33 +1,29 @@
 // speical rule in pest
 // https://pest.rs/book/grammars/syntax.html#silent-and-atomic-rules
 WHITESPACE = _{ " " | "\t" | NEWLINE }
-block_comment = _{ "/*" ~ (block_comment | !"*/" ~ ANY)* ~ "*/" }
 COMMENT    = _{ block_comment | ("//" ~ (!NEWLINE~ ANY)*) }
+  block_comment = _{ "/*" ~ (block_comment | !"*/" ~ ANY)* ~ "*/" }
 
 // name of function
 // can't begin with digit
 id= @{ ASCII_ALPHA  ~ (ASCII_ALPHANUMERIC|"_")* }
-ids= { (id ~ ("," ~ id) * )? }
+  ids= { (id ~ ("," ~ id) * )? }
 
 directFieldWrite={ id ~ "." ~ id }
 indirectFieldWrite={"(" ~ expression ~ ")" ~ "." ~ id}
 derefWrite={ "*" ~ expression}
-assignableExpression={id | directFieldWrite | indirectFieldWrite | derefWrite}
+  assignableExpression=_{id | directFieldWrite | indirectFieldWrite | derefWrite}
 
-var = { ("var" ~ ids ~ ";")* }
+vars = { ("var" ~ ids ~ ";")* }
 return_expr = { "return" ~ expression ~ ";"}
 output = { "output" ~ expression ~ ";"}
 error  = { "error" ~ expression ~ ";"}
-assign = { assignableExpression ~ "=" ~ expression ~ ";"}
+    assign = { assignableExpression ~ "=" ~ expression ~ ";"}
 
 if_expr = {"if" ~ "(" ~ expression ~ ")" ~ statement ~ ("else" ~ statement)?}
 while_expr = {"while" ~ "(" ~ expression ~ ")" ~ statement }
-block={ "{" ~ statements ~ "}" }
-
-statement={ output | error | assign | if_expr | while_expr | block }
-
-// TODO statmements={statement+} ?
-statements={statement*}
+block={ "{" ~ statement* ~ "}" }
+    statement=_{ output | error | assign | if_expr | while_expr | block }
 
 function = {
   id
@@ -35,46 +31,53 @@ function = {
   ~ ids
   ~ ")"
   ~ "{"
-  ~ var
-  ~ statements
+  ~ vars
+  ~ statement*
   ~ return_expr
   ~ "}"
 }
 
 program={SOI ~ function* ~ EOI}
 
-atom = {
+number=@{"-"? ~ ASCII_DIGIT+}
+
+atom = _{
+  fieldAccess |
   funApp |
   number |
   parens |
   pointersExpression |
-  "input" |
+  input |
   id |
   record
 }
 
+input={"input"}
+
 field ={id ~ ":" ~ expression}
 // struct
-record = {"{" ~ field ~ ("," ~ field)*~ "}"}
+record = {"{" ~ field ~ ("," ~ field)* ~ "}"}
 
+null={"null"}
 alloc={"alloc" ~ expression}
-
 ref_expr ={"&" ~ id}
 deref={"*" ~ atom}
-pointersExpression={"null"| alloc |ref_expr |deref}
+pointersExpression=_{null| alloc |ref_expr |deref}
 
-number=@{"-"? ~ ASCII_DIGIT+}
-
-parens={ "(" ~ expression ~ ")" }
+parens=_{ "(" ~ expression ~ ")" }
 
 funApp={ (id| parens) ~  expressions }
 
-access={(id|deref|parens) ~ ("." ~ id)+}
+fieldAccess={(id|deref|parens) ~ ("." ~ id)+}
 
-term={access |(atom ~ (("*"|"/") ~ term)?)  }
+expression={atom ~ (operation ~ expression)? }
+    expressions=_{"(" ~ ")" | "(" ~ expression ~ ("," ~ expression)* ~ ")" }
 
-operation={term ~ (("+"|"-") ~ expression)? }
+operation = _{ add | subtract | multiply | divide | gt | equal }
+    add      = { "+" }                                                                                        
+    subtract = { "-" }                                                                                        
+    multiply = { "*" }                                                                                        
+    divide   = { "/" }                                                                                        
+    gt       = { ">" }
+    equal    = { "==" }
 
-expression={operation ~ ((">"| "==") ~ operation)? }
-
-expressions={"(" ~ ")" | "(" ~ expression ~ ("," ~ expression)* ~ ")" }
