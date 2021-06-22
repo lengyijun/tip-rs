@@ -23,41 +23,49 @@ struct IdentParser;
 pub fn parse(input: &str) {
     let pairs = IdentParser::parse(Rule::program, input).unwrap_or_else(|e| panic!("{}", e));
     for pair in pairs {
-        build_ast_from_expr(pair);
+        let a = build_ast_from_expr(pair);
+        dbg!(a);
     }
 }
 
+#[derive(Debug)]
 struct DirectFieldWrite {
     id: String,
     field: String,
 }
 
+#[derive(Debug)]
 struct IndirectFieldWrite {
     // Box<AstNode<Expression>>
     expr: Box<AstNode>,
     field: String,
 }
 
+#[derive(Debug)]
 struct DerefWrite {
     // Box<AstNode::Atom>
     expr: Box<AstNode>,
 }
 
+#[derive(Debug)]
 struct Return {
     // Box<AstNode<Expression>>
     expr: Box<AstNode>,
 }
 
+#[derive(Debug)]
 struct Output {
     // Box<AstNode<Expression>>
     expr: Box<AstNode>,
 }
 
+#[derive(Debug)]
 struct Error {
     // Box<AstNode<Expression>>
     expr: Box<AstNode>,
 }
 
+#[derive(Debug)]
 struct Assign {
     /// AstNode::Id, AstNode::DirectFieldWrite, AstNode::IndirectFieldWrite, AstNode::DerefWrite
     left: Box<AstNode>,
@@ -65,6 +73,7 @@ struct Assign {
     right: Box<AstNode>,
 }
 
+#[derive(Debug)]
 struct If {
     /// AstNode::Expression
     guard: Box<AstNode>,
@@ -74,6 +83,7 @@ struct If {
     else_block: Option<Box<AstNode>>,
 }
 
+#[derive(Debug)]
 struct While {
     /// AstNode::Expression
     guard: Box<AstNode>,
@@ -81,10 +91,12 @@ struct While {
     block: Box<AstNode>,
 }
 
+#[derive(Debug)]
 struct Block {
     exprs: Vec<AstNode>,
 }
 
+#[derive(Debug)]
 struct Function {
     name: String,
     parameters: Box<AstNode>,
@@ -95,38 +107,45 @@ struct Function {
     ret: Box<AstNode>,
 }
 
+#[derive(Debug)]
 struct Field {
     id: String,
     /// AstNode::Expression
     expression: Box<AstNode>,
 }
 
+#[derive(Debug)]
 struct Alloc {
     /// AstNode::Expression
     expr: Box<AstNode>,
 }
 
+#[derive(Debug)]
 struct Ref {
     /// AstNode::Id
     id: Box<AstNode>,
 }
 
+#[derive(Debug)]
 struct Deref {
     /// AstNode::Expression
     atom: Box<AstNode>,
 }
 
+#[derive(Debug)]
 struct FunApp {
     method: Box<AstNode>,
     /// AstNode::Expression
     params: Vec<AstNode>,
 }
 
+#[derive(Debug)]
 struct FieldAccess {
     name: Box<AstNode>,
     path: Vec<String>,
 }
 
+#[derive(Debug)]
 enum Op {
     Add,
     Subtract,
@@ -136,6 +155,7 @@ enum Op {
     Equal,
 }
 
+#[derive(Debug)]
 struct BinaryOp {
     op: Op,
     /// AstNode::Atom or AstNode::Expression
@@ -143,8 +163,7 @@ struct BinaryOp {
     right: Box<AstNode>,
 }
 
-struct Expression {}
-
+#[derive(Debug)]
 enum AstNode {
     Id(String),
     /// AstNode::Id
@@ -152,7 +171,8 @@ enum AstNode {
     DirectFieldWrite(DirectFieldWrite),
     IndirectFieldWrite(IndirectFieldWrite),
     DerefWrite(DerefWrite),
-    Vars(Vec<String>),
+    /// AstNode::Id
+    Vars(Vec<AstNode>),
     Return(Return),
     Output(Output),
     Error(Error),
@@ -246,7 +266,19 @@ fn build_ast_from_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
                 expr: Box::new(parse_expression(pair.next().unwrap().into_inner())),
             })
         }
-        Rule::vars => AstNode::Vars(pair.into_inner().map(|x| x.as_str().to_string()).collect()),
+        Rule::vars => AstNode::Vars(
+            pair.into_inner()
+                .map(build_ast_from_expr)
+                .map(|x| {
+                    if let AstNode::Ids(y) = x {
+                        y.into_iter()
+                    } else {
+                        unreachable!();
+                    }
+                })
+                .flatten()
+                .collect(),
+        ),
         Rule::return_expr => {
             let mut pair = pair.into_inner();
             AstNode::Return(Return {
@@ -356,7 +388,12 @@ fn build_ast_from_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
 
 #[cfg(test)]
 mod tests {
+    use super::Rule;
+    use crate::ast_parser::build_ast_from_expr;
     use crate::ast_parser::parse;
+    use crate::ast_parser::IdentParser;
+    use crate::pest::Parser;
+
     use std::fs;
 
     #[test]
@@ -366,9 +403,29 @@ mod tests {
             let path = entry.path();
             if path.is_file() {
                 let content = &fs::read_to_string(&path)?;
-                dbg!(&path);
+                // dbg!(&path);
                 parse(&content);
             }
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_fib() -> std::io::Result<()> {
+        let path = "/home/lyj/TIP/examples/fib.tip";
+        let content = &fs::read_to_string(&path)?;
+        parse(&content);
+        Ok(())
+    }
+
+    #[test]
+    fn test_mountain_climbing() -> std::io::Result<()> {
+        let content = "1+2*3";
+        let pairs =
+            IdentParser::parse(Rule::expression, content).unwrap_or_else(|e| panic!("{}", e));
+        for pair in pairs {
+            let a = build_ast_from_expr(pair);
+            dbg!(a);
         }
         Ok(())
     }
