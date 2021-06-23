@@ -1,17 +1,58 @@
-trait Term<T> {}
+use crate::ast_parser::AstNode;
+use std::collections::HashMap;
 
-trait Var<T>: Term<T> {}
-trait Cons<T>: Term<T> {}
-trait Mu<T>: Term<T> {}
+pub enum Term {
+    Var(Var),
+    Cons(Cons),
+    Mu(Mu),
+}
 
-trait FreshVarType<T>: Var<T> {}
-trait VarType<T>: Var<T> {}
+enum Var {
+    FreshVarType(FreshVarType),
+    VarType(VarType),
+}
 
-// actually IntType: Cons<T>
-trait IntType<T>: Cons<T> {}
-trait FunctionType<T>: Cons<T> {}
-trait PointerType<T>: Cons<T> {}
-trait RecordType<T>: Cons<T> {}
-trait AbsendType<T>: Cons<T> {}
+pub enum Cons {
+    IntType(IntType),
+    FunctionType(FunctionType),
+    PointerType(PointerType),
+    RecordType(RecordType),
+    AbsentType(AbsentType),
+}
 
-trait RecursiveType<T>: Mu<T> {}
+enum Mu {
+    RecursiveType(RecursiveType),
+}
+
+struct VarType(AstNode);
+struct FreshVarType(usize);
+impl FreshVarType {
+    fn new() -> Self {
+        static mut index: usize = 0;
+        unsafe {
+            index += 1;
+            Self(index)
+        }
+    }
+}
+
+struct IntType;
+
+struct FunctionType {
+    pub params: Vec<Term>,
+    pub ret: Box<Term>,
+}
+
+struct PointerType {
+    pub of: Box<Term>,
+}
+
+struct RecordType {
+    pub fields: HashMap<String, Term>,
+}
+
+// TODO
+struct AbsentType;
+
+// TODO
+struct RecursiveType;

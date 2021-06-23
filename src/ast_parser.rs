@@ -164,7 +164,15 @@ struct BinaryOp {
 }
 
 #[derive(Debug)]
-enum AstNode {
+pub struct AstNode {
+    kind: AstNodeKind,
+    /// position
+    line: usize,
+    col: usize,
+}
+
+#[derive(Debug)]
+pub enum AstNodeKind {
     Id(String),
     /// AstNode::Id
     Ids(Vec<AstNode>),
@@ -205,104 +213,174 @@ fn parse_expression(expression: Pairs<Rule>) -> AstNode {
             Rule::expression => parse_expression(pair.into_inner()),
             _ => build_ast_from_expr(pair),
         },
-        |lhs: AstNode, op: Pair<Rule>, rhs: AstNode| match op.as_rule() {
-            Rule::add => AstNode::Expression(BinaryOp {
-                left: Box::new(lhs),
-                right: Box::new(rhs),
-                op: Op::Add,
-            }),
-            Rule::subtract => AstNode::Expression(BinaryOp {
-                left: Box::new(lhs),
-                right: Box::new(rhs),
-                op: Op::Subtract,
-            }),
-            Rule::multiply => AstNode::Expression(BinaryOp {
-                left: Box::new(lhs),
-                right: Box::new(rhs),
-                op: Op::Multiply,
-            }),
-            Rule::divide => AstNode::Expression(BinaryOp {
-                left: Box::new(lhs),
-                right: Box::new(rhs),
-                op: Op::Divide,
-            }),
+        |lhs: AstNode, op: Pair<Rule>, rhs: AstNode| {
+            let (line, col) = (lhs.line, lhs.col);
+            match op.as_rule() {
+                Rule::add => AstNode {
+                    line,
+                    col,
+                    kind: AstNodeKind::Expression(BinaryOp {
+                        left: Box::new(lhs),
+                        right: Box::new(rhs),
+                        op: Op::Add,
+                    }),
+                },
+                Rule::subtract => AstNode {
+                    line,
+                    col,
+                    kind: AstNodeKind::Expression(BinaryOp {
+                        left: Box::new(lhs),
+                        right: Box::new(rhs),
+                        op: Op::Subtract,
+                    }),
+                },
+                Rule::multiply => AstNode {
+                    line,
+                    col,
+                    kind: AstNodeKind::Expression(BinaryOp {
+                        left: Box::new(lhs),
+                        right: Box::new(rhs),
+                        op: Op::Multiply,
+                    }),
+                },
+                Rule::divide => AstNode {
+                    line,
+                    col,
+                    kind: AstNodeKind::Expression(BinaryOp {
+                        left: Box::new(lhs),
+                        right: Box::new(rhs),
+                        op: Op::Divide,
+                    }),
+                },
 
-            Rule::equal => AstNode::Expression(BinaryOp {
-                left: Box::new(lhs),
-                right: Box::new(rhs),
-                op: Op::Equal,
-            }),
-            Rule::gt => AstNode::Expression(BinaryOp {
-                left: Box::new(lhs),
-                right: Box::new(rhs),
-                op: Op::Gt,
-            }),
-            _ => unreachable!(),
+                Rule::equal => AstNode {
+                    line,
+                    col,
+                    kind: AstNodeKind::Expression(BinaryOp {
+                        left: Box::new(lhs),
+                        right: Box::new(rhs),
+                        op: Op::Equal,
+                    }),
+                },
+                Rule::gt => AstNode {
+                    line,
+                    col,
+                    kind: AstNodeKind::Expression(BinaryOp {
+                        left: Box::new(lhs),
+                        right: Box::new(rhs),
+                        op: Op::Gt,
+                    }),
+                },
+                _ => unreachable!(),
+            }
         },
     )
 }
 
 fn build_ast_from_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
+    // dbg!(pair.as_str());
+
+    let (line, col) = pair.as_span().start_pos().line_col();
     match pair.as_rule() {
-        Rule::id => AstNode::Id(pair.as_str().into()),
-        Rule::ids => AstNode::Ids(pair.into_inner().map(build_ast_from_expr).collect()),
+        Rule::id => AstNode {
+            kind: AstNodeKind::Id(pair.as_str().into()),
+            line,
+            col,
+        },
+        Rule::ids => AstNode {
+            line,
+            col,
+            kind: AstNodeKind::Ids(pair.into_inner().map(build_ast_from_expr).collect()),
+        },
         Rule::directFieldWrite => {
             let mut pair = pair.into_inner();
-            AstNode::DirectFieldWrite(DirectFieldWrite {
-                id: pair.next().unwrap().as_str().into(),
-                field: pair.next().unwrap().as_str().into(),
-            })
+            AstNode {
+                line,
+                col,
+                kind: AstNodeKind::DirectFieldWrite(DirectFieldWrite {
+                    id: pair.next().unwrap().as_str().into(),
+                    field: pair.next().unwrap().as_str().into(),
+                }),
+            }
         }
         Rule::indirectFieldWrite => {
             let mut pair = pair.into_inner();
-            AstNode::IndirectFieldWrite(IndirectFieldWrite {
-                expr: Box::new(parse_expression(pair.next().unwrap().into_inner())),
-                field: pair.next().unwrap().as_str().into(),
-            })
+            AstNode {
+                line,
+                col,
+                kind: AstNodeKind::IndirectFieldWrite(IndirectFieldWrite {
+                    expr: Box::new(parse_expression(pair.next().unwrap().into_inner())),
+                    field: pair.next().unwrap().as_str().into(),
+                }),
+            }
         }
         Rule::derefWrite => {
             let mut pair = pair.into_inner();
-            AstNode::DerefWrite(DerefWrite {
-                expr: Box::new(parse_expression(pair.next().unwrap().into_inner())),
-            })
+            AstNode {
+                line,
+                col,
+                kind: AstNodeKind::DerefWrite(DerefWrite {
+                    expr: Box::new(parse_expression(pair.next().unwrap().into_inner())),
+                }),
+            }
         }
-        Rule::vars => AstNode::Vars(
-            pair.into_inner()
-                .map(build_ast_from_expr)
-                .map(|x| {
-                    if let AstNode::Ids(y) = x {
-                        y.into_iter()
-                    } else {
-                        unreachable!();
-                    }
-                })
-                .flatten()
-                .collect(),
-        ),
+        Rule::vars => AstNode {
+            line,
+            col,
+            kind: AstNodeKind::Vars(
+                pair.into_inner()
+                    .map(build_ast_from_expr)
+                    .map(|x| {
+                        if let AstNodeKind::Ids(y) = x.kind {
+                            y.into_iter()
+                        } else {
+                            unreachable!();
+                        }
+                    })
+                    .flatten()
+                    .collect(),
+            ),
+        },
         Rule::return_expr => {
             let mut pair = pair.into_inner();
-            AstNode::Return(Return {
-                expr: Box::new(parse_expression(pair.next().unwrap().into_inner())),
-            })
+            AstNode {
+                line,
+                col,
+                kind: AstNodeKind::Return(Return {
+                    expr: Box::new(parse_expression(pair.next().unwrap().into_inner())),
+                }),
+            }
         }
         Rule::output => {
             let mut pair = pair.into_inner();
-            AstNode::Output(Output {
-                expr: Box::new(parse_expression(pair.next().unwrap().into_inner())),
-            })
+            AstNode {
+                line,
+                col,
+                kind: AstNodeKind::Output(Output {
+                    expr: Box::new(parse_expression(pair.next().unwrap().into_inner())),
+                }),
+            }
         }
         Rule::error => {
             let mut pair = pair.into_inner();
-            AstNode::Error(Error {
-                expr: Box::new(parse_expression(pair.next().unwrap().into_inner())),
-            })
+            AstNode {
+                line,
+                col,
+                kind: AstNodeKind::Error(Error {
+                    expr: Box::new(parse_expression(pair.next().unwrap().into_inner())),
+                }),
+            }
         }
         Rule::assign => {
             let mut pair = pair.into_inner();
-            AstNode::Assign(Assign {
-                left: Box::new(build_ast_from_expr(pair.next().unwrap())),
-                right: Box::new(build_ast_from_expr(pair.next().unwrap())),
-            })
+            AstNode {
+                line,
+                col,
+                kind: AstNodeKind::Assign(Assign {
+                    left: Box::new(build_ast_from_expr(pair.next().unwrap())),
+                    right: Box::new(build_ast_from_expr(pair.next().unwrap())),
+                }),
+            }
         }
         Rule::if_expr => {
             let mut pair = pair.into_inner();
@@ -311,22 +389,34 @@ fn build_ast_from_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
             let else_block = pair
                 .next()
                 .map_or_else(|| None, |x| Some(Box::new(build_ast_from_expr(x))));
-            AstNode::If(If {
-                guard,
-                if_block,
-                else_block,
-            })
+            AstNode {
+                line,
+                col,
+                kind: AstNodeKind::If(If {
+                    guard,
+                    if_block,
+                    else_block,
+                }),
+            }
         }
         Rule::while_expr => {
             let mut pair = pair.into_inner();
-            AstNode::While(While {
-                guard: Box::new(parse_expression(pair.next().unwrap().into_inner())),
-                block: Box::new(build_ast_from_expr(pair.next().unwrap())),
-            })
+            AstNode {
+                line,
+                col,
+                kind: AstNodeKind::While(While {
+                    guard: Box::new(parse_expression(pair.next().unwrap().into_inner())),
+                    block: Box::new(build_ast_from_expr(pair.next().unwrap())),
+                }),
+            }
         }
-        Rule::block => AstNode::Block(Block {
-            exprs: pair.into_inner().map(build_ast_from_expr).collect(),
-        }),
+        Rule::block => AstNode {
+            line,
+            col,
+            kind: AstNodeKind::Block(Block {
+                exprs: pair.into_inner().map(build_ast_from_expr).collect(),
+            }),
+        },
         Rule::function => {
             let mut pair = pair.into_inner();
             let name = pair.next().unwrap().as_str().to_string();
@@ -334,52 +424,100 @@ fn build_ast_from_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
             let vars = Box::new(build_ast_from_expr(pair.next().unwrap()));
             let mut statements: Vec<AstNode> = pair.map(build_ast_from_expr).collect();
             let ret = Box::new(statements.pop().unwrap());
-            AstNode::Function(Function {
-                name,
-                parameters,
-                vars,
-                statements,
-                ret,
-            })
+            AstNode {
+                line,
+                col,
+                kind: AstNodeKind::Function(Function {
+                    name,
+                    parameters,
+                    vars,
+                    statements,
+                    ret,
+                }),
+            }
         }
-        Rule::program => AstNode::Program(
-            pair.into_inner()
-                .filter(|x| x.as_rule() != Rule::EOI)
-                .map(build_ast_from_expr)
-                .collect(),
-        ),
-        Rule::number => AstNode::Number(pair.as_str().parse().unwrap()),
-        Rule::input => AstNode::Input,
+        Rule::program => AstNode {
+            line,
+            col,
+            kind: AstNodeKind::Program(
+                pair.into_inner()
+                    .filter(|x| x.as_rule() != Rule::EOI)
+                    .map(build_ast_from_expr)
+                    .collect(),
+            ),
+        },
+        Rule::number => AstNode {
+            line,
+            col,
+            kind: AstNodeKind::Number(pair.as_str().parse().unwrap()),
+        },
+        Rule::input => AstNode {
+            line,
+            col,
+            kind: AstNodeKind::Input,
+        },
         Rule::field => {
             let mut pair = pair.into_inner();
-            AstNode::Field(Field {
-                id: pair.next().unwrap().as_str().to_string(),
-                expression: Box::new(build_ast_from_expr(pair.next().unwrap())),
-            })
+            AstNode {
+                line,
+                col,
+                kind: AstNodeKind::Field(Field {
+                    id: pair.next().unwrap().as_str().to_string(),
+                    expression: Box::new(build_ast_from_expr(pair.next().unwrap())),
+                }),
+            }
         }
-        Rule::record => AstNode::Record(pair.into_inner().map(build_ast_from_expr).collect()),
-        Rule::null => AstNode::Null,
-        Rule::alloc => AstNode::Alloc(Alloc {
-            expr: Box::new(parse_expression(pair.into_inner())),
-        }),
-        Rule::ref_expr => AstNode::Ref(Ref {
-            id: Box::new(build_ast_from_expr(pair.into_inner().next().unwrap())),
-        }),
-        Rule::deref => AstNode::Deref(Deref {
-            atom: Box::new(build_ast_from_expr(pair.into_inner().next().unwrap())),
-        }),
+        Rule::record => AstNode {
+            line,
+            col,
+            kind: AstNodeKind::Record(pair.into_inner().map(build_ast_from_expr).collect()),
+        },
+        Rule::null => AstNode {
+            line,
+            col,
+            kind: AstNodeKind::Null,
+        },
+        Rule::alloc => AstNode {
+            line,
+            col,
+            kind: AstNodeKind::Alloc(Alloc {
+                expr: Box::new(parse_expression(pair.into_inner())),
+            }),
+        },
+        Rule::ref_expr => AstNode {
+            line,
+            col,
+            kind: AstNodeKind::Ref(Ref {
+                id: Box::new(build_ast_from_expr(pair.into_inner().next().unwrap())),
+            }),
+        },
+        Rule::deref => AstNode {
+            line,
+            col,
+            kind: AstNodeKind::Deref(Deref {
+                atom: Box::new(build_ast_from_expr(pair.into_inner().next().unwrap())),
+            }),
+        },
         Rule::funApp => {
             let mut pair = pair.into_inner();
             let method = Box::new(build_ast_from_expr(pair.next().unwrap()));
             let params: Vec<AstNode> = pair.map(build_ast_from_expr).collect();
-            AstNode::FunApp(FunApp { method, params })
+            AstNode {
+                line,
+                col,
+                kind: AstNodeKind::FunApp(FunApp { method, params }),
+            }
         }
         Rule::fieldAccess => {
             let mut pair = pair.into_inner();
-            AstNode::FieldAccess(FieldAccess {
-                name: Box::new(build_ast_from_expr(pair.next().unwrap())),
-                path: pair.map(|x| x.as_str().to_string()).collect(),
-            })
+            AstNode {
+                line,
+                col,
+                kind: AstNodeKind::FieldAccess(FieldAccess {
+                    name: Box::new(build_ast_from_expr(pair.next().unwrap())),
+                    path: pair.map(|x| x.as_str().to_string()).collect(),
+                }),
+            }
         }
         Rule::expression => parse_expression(pair.into_inner()),
         _ => unreachable!(),

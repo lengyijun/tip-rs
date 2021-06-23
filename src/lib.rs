@@ -6,3 +6,4 @@ extern crate lazy_static;
 
 mod ast_parser;
 mod term;
+mod unionFind;
