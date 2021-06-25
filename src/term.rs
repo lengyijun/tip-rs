@@ -17,7 +17,7 @@ pub enum Cons {
     FunctionType(FunctionType),
     PointerType(PointerType),
     RecordType(RecordType),
-    AbsentType(AbsentType),
+    AbsentFieldType(AbsentFieldType),
 }
 
 enum Mu {
@@ -70,8 +70,8 @@ impl RecordType {
     }
 }
 
-// TODO
-struct AbsentType;
+// used in RecordType. If a field can't infer type
+struct AbsentFieldType;
 
 // TODO
 struct RecursiveType;
