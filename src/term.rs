@@ -2,20 +2,20 @@ use crate::ast_parser::AstNode;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 
-#[derive(Debug,Hash,Eq,PartialEq)]
+#[derive(Debug,Hash,Eq,PartialEq,Clone)]
 pub enum Term {
     Var(Var),
     Cons(Cons),
     Mu(Mu),
 }
 
-#[derive(Debug,Hash,Eq,PartialEq)]
+#[derive(Debug,Hash,Eq,PartialEq,Clone)]
 enum Var {
     FreshVarType(FreshVarType),
     VarType(VarType),
 }
 
-#[derive(Debug,Hash,Eq,PartialEq)]
+#[derive(Debug,Hash,Eq,PartialEq,Clone)]
 pub enum Cons {
     IntType(IntType),
     FunctionType(FunctionType),
@@ -24,15 +24,15 @@ pub enum Cons {
     AbsentFieldType(AbsentFieldType),
 }
 
-#[derive(Debug,Hash,Eq,PartialEq)]
+#[derive(Debug,Hash,Eq,PartialEq,Clone)]
 enum Mu {
     RecursiveType(RecursiveType),
 }
 
-#[derive(Debug,Hash,Eq,PartialEq)]
+#[derive(Debug,Hash,Eq,PartialEq,Clone)]
 struct VarType(AstNode);
 
-#[derive(Debug,Hash,Eq,PartialEq)]
+#[derive(Debug,Hash,Eq,PartialEq,Clone)]
 struct FreshVarType(usize);
 impl FreshVarType {
     fn new() -> Self {
@@ -44,10 +44,10 @@ impl FreshVarType {
     }
 }
 
-#[derive(Debug,Hash,Eq,PartialEq)]
+#[derive(Debug,Hash,Eq,PartialEq,Clone)]
 struct IntType;
 
-#[derive(Debug,Hash,Eq,PartialEq)]
+#[derive(Debug,Hash,Eq,PartialEq,Clone)]
 struct FunctionType {
     /// initial with Vec<Term::FreshVarType>
     pub params: Vec<Term>,
@@ -55,12 +55,12 @@ struct FunctionType {
     pub ret: Box<Term>,
 }
 
-#[derive(Debug,Hash,Eq,PartialEq)]
+#[derive(Debug,Hash,Eq,PartialEq,Clone)]
 struct PointerType {
     pub of: Box<Term>,
 }
 
-#[derive(Debug,Eq,PartialEq)]
+#[derive(Debug,Eq,PartialEq,Clone)]
 struct RecordType {
     /// initial with HashMap: x=>Term::FreshVarType
     pub fields: HashMap<String, Term>,
@@ -89,9 +89,9 @@ impl Hash for RecordType {
 }
 
 // used in RecordType. If a field can't infer type
-#[derive(Debug,Hash,Eq,PartialEq)]
+#[derive(Debug,Hash,Eq,PartialEq,Clone)]
 struct AbsentFieldType;
 
 // TODO
-#[derive(Debug,Hash,Eq,PartialEq)]
+#[derive(Debug,Hash,Eq,PartialEq,Clone)]
 struct RecursiveType;

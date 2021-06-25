@@ -1,9 +1,9 @@
 use crate::ast_parser::AstNode;
 use crate::term::Cons;
 use crate::term::Term;
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 
-pub struct UnionFind(BTreeMap<Term, Term>);
+pub struct UnionFind(HashMap<Term, Term>);
 
 impl UnionFind {
     pub fn union(&mut self, k1: Term, k2: Term) {
@@ -48,7 +48,7 @@ impl UnionFind {
                         self.union(r1.fields[key], r2.fields[key]);
                     }
                 }
-                (Cons::AbsentType(a1), Cons::AbsentType(a2)) => {}
+                (Cons::AbsentFieldType(a1), Cons::AbsentFieldType(a2)) => {}
                 (_, _) => {
                     unreachable!();
                 }
@@ -61,6 +61,14 @@ impl UnionFind {
         };
     }
 
-    // TODO
-    fn find(&self) {}
+    fn find(&mut self,key: &Term) ->&Term{
+        let par=self.0.get(key);
+        if par==key{
+            par
+        }else{
+            let y=self.find(par);
+            self.0.insert(key,y.clone());
+            y
+        }
+    }
 }
