@@ -39,7 +39,9 @@ impl FreshVarType {
 struct IntType;
 
 struct FunctionType {
+    /// initial with Vec<Term::FreshVarType>
     pub params: Vec<Term>,
+    /// initial with Box<Term::FreshVarType>
     pub ret: Box<Term>,
 }
 
@@ -48,7 +50,24 @@ struct PointerType {
 }
 
 struct RecordType {
+    /// initial with HashMap: x=>Term::FreshVarType
     pub fields: HashMap<String, Term>,
+    /// HashMap can't be Hash
+    /// so we use index to distinguish two RecordType
+    index: usize,
+}
+impl RecordType {
+    fn new(input: Vec<String>) -> Self {
+        static mut index: usize = 0;
+        let mut fields = HashMap::new();
+        for x in input {
+            fields.insert(x, Term::Var(Var::FreshVarType(FreshVarType::new())));
+        }
+        unsafe {
+            index += 1;
+            RecordType { index, fields }
+        }
+    }
 }
 
 // TODO
