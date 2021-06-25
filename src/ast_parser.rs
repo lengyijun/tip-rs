@@ -28,44 +28,44 @@ pub fn parse(input: &str) {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug,Hash)]
 struct DirectFieldWrite {
     id: String,
     field: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Hash)]
 struct IndirectFieldWrite {
     // Box<AstNode<Expression>>
     expr: Box<AstNode>,
     field: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Hash)]
 struct DerefWrite {
     // Box<AstNode::Atom>
     expr: Box<AstNode>,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Hash)]
 struct Return {
     // Box<AstNode<Expression>>
     expr: Box<AstNode>,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Hash)]
 struct Output {
     // Box<AstNode<Expression>>
     expr: Box<AstNode>,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Hash)]
 struct Error {
     // Box<AstNode<Expression>>
     expr: Box<AstNode>,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Hash)]
 struct Assign {
     /// AstNode::Id, AstNode::DirectFieldWrite, AstNode::IndirectFieldWrite, AstNode::DerefWrite
     left: Box<AstNode>,
@@ -73,7 +73,7 @@ struct Assign {
     right: Box<AstNode>,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Hash)]
 struct If {
     /// AstNode::Expression
     guard: Box<AstNode>,
@@ -83,7 +83,7 @@ struct If {
     else_block: Option<Box<AstNode>>,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Hash)]
 struct While {
     /// AstNode::Expression
     guard: Box<AstNode>,
@@ -91,12 +91,12 @@ struct While {
     block: Box<AstNode>,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Hash)]
 struct Block {
     exprs: Vec<AstNode>,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Hash)]
 struct Function {
     name: String,
     parameters: Box<AstNode>,
@@ -107,45 +107,45 @@ struct Function {
     ret: Box<AstNode>,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Hash)]
 struct Field {
     id: String,
     /// AstNode::Expression
     expression: Box<AstNode>,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Hash)]
 struct Alloc {
     /// AstNode::Expression
     expr: Box<AstNode>,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Hash)]
 struct Ref {
     /// AstNode::Id
     id: Box<AstNode>,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Hash)]
 struct Deref {
     /// AstNode::Expression
     atom: Box<AstNode>,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Hash)]
 struct FunApp {
     method: Box<AstNode>,
     /// AstNode::Expression
     params: Vec<AstNode>,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Hash)]
 struct FieldAccess {
     name: Box<AstNode>,
     path: Vec<String>,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Hash)]
 enum Op {
     Add,
     Subtract,
@@ -155,7 +155,7 @@ enum Op {
     Equal,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Hash)]
 struct BinaryOp {
     op: Op,
     /// AstNode::Atom or AstNode::Expression
@@ -163,15 +163,16 @@ struct BinaryOp {
     right: Box<AstNode>,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Hash)]
 pub struct AstNode {
     kind: AstNodeKind,
-    /// position
+    /// start position
+    /// note: different AstNode may share same start position
     line: usize,
     col: usize,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Hash)]
 pub enum AstNodeKind {
     Id(String),
     /// AstNode::Id
