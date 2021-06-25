@@ -2,20 +2,20 @@ use crate::ast_parser::AstNode;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 
-#[derive(Debug,Hash,Eq,PartialEq,Clone)]
+#[derive(Debug, Hash, Eq, PartialEq, Clone)]
 pub enum Term {
     Var(Var),
     Cons(Cons),
     Mu(Mu),
 }
 
-#[derive(Debug,Hash,Eq,PartialEq,Clone)]
-enum Var {
+#[derive(Debug, Hash, Eq, PartialEq, Clone)]
+pub enum Var {
     FreshVarType(FreshVarType),
     VarType(VarType),
 }
 
-#[derive(Debug,Hash,Eq,PartialEq,Clone)]
+#[derive(Debug, Hash, Eq, PartialEq, Clone)]
 pub enum Cons {
     IntType(IntType),
     FunctionType(FunctionType),
@@ -24,16 +24,16 @@ pub enum Cons {
     AbsentFieldType(AbsentFieldType),
 }
 
-#[derive(Debug,Hash,Eq,PartialEq,Clone)]
-enum Mu {
+#[derive(Debug, Hash, Eq, PartialEq, Clone)]
+pub enum Mu {
     RecursiveType(RecursiveType),
 }
 
-#[derive(Debug,Hash,Eq,PartialEq,Clone)]
-struct VarType(AstNode);
+#[derive(Debug, Hash, Eq, PartialEq, Clone)]
+pub struct VarType(AstNode);
 
-#[derive(Debug,Hash,Eq,PartialEq,Clone)]
-struct FreshVarType(usize);
+#[derive(Debug, Hash, Eq, PartialEq, Clone)]
+pub struct FreshVarType(usize);
 impl FreshVarType {
     fn new() -> Self {
         static mut index: usize = 0;
@@ -44,24 +44,24 @@ impl FreshVarType {
     }
 }
 
-#[derive(Debug,Hash,Eq,PartialEq,Clone)]
-struct IntType;
+#[derive(Debug, Hash, Eq, PartialEq, Clone)]
+pub struct IntType;
 
-#[derive(Debug,Hash,Eq,PartialEq,Clone)]
-struct FunctionType {
+#[derive(Debug, Hash, Eq, PartialEq, Clone)]
+pub struct FunctionType {
     /// initial with Vec<Term::FreshVarType>
     pub params: Vec<Term>,
     /// initial with Box<Term::FreshVarType>
     pub ret: Box<Term>,
 }
 
-#[derive(Debug,Hash,Eq,PartialEq,Clone)]
-struct PointerType {
+#[derive(Debug, Hash, Eq, PartialEq, Clone)]
+pub struct PointerType {
     pub of: Box<Term>,
 }
 
-#[derive(Debug,Eq,PartialEq,Clone)]
-struct RecordType {
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct RecordType {
     /// initial with HashMap: x=>Term::FreshVarType
     pub fields: HashMap<String, Term>,
     /// HashMap can't be Hash
@@ -84,14 +84,14 @@ impl RecordType {
 
 impl Hash for RecordType {
     fn hash<H: Hasher>(&self, state: &mut H) {
-            self.index.hash(state);
-        }
+        self.index.hash(state);
+    }
 }
 
 // used in RecordType. If a field can't infer type
-#[derive(Debug,Hash,Eq,PartialEq,Clone)]
-struct AbsentFieldType;
+#[derive(Debug, Hash, Eq, PartialEq, Clone)]
+pub struct AbsentFieldType;
 
 // TODO
-#[derive(Debug,Hash,Eq,PartialEq,Clone)]
-struct RecursiveType;
+#[derive(Debug, Hash, Eq, PartialEq, Clone)]
+pub struct RecursiveType;
