@@ -141,10 +141,13 @@ pub struct FunApp {
     pub params: Vec<AstNode>,
 }
 
+/// a.b
+/// a.b.c will generate recursive FieldAccess
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
 pub struct FieldAccess {
+    // AstNodeKind::Expression
     pub name: Box<AstNode>,
-    pub path: Vec<String>,
+    pub path: String,
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
@@ -177,16 +180,9 @@ pub struct AstNode {
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
 pub enum AstNodeKind {
     Id(String),
-    /// only temporary, for convenient
-    /// will not be used in DFS
-    /// Vec<AstNode::Id>
-    Ids(Vec<AstNode>),
     DirectFieldWrite(DirectFieldWrite),
     IndirectFieldWrite(IndirectFieldWrite),
     DerefWrite(DerefWrite),
-    /// only temporary
-    /// Vec<AstNode::Id>
-    Vars(Vec<AstNode>),
     Return(Return),
     Output(Output),
     Error(Error),
@@ -195,12 +191,12 @@ pub enum AstNodeKind {
     While(While),
     Block(Block),
     Function(Function),
-    /// AstNode::Function
+    // AstNode::Function
     Program(Vec<AstNode>),
     Number(i32),
     Input,
     Field(Field),
-    /// AstNode::Field
+    // AstNode::Field
     Record(Vec<AstNode>),
     Null,
     Alloc(Alloc),
@@ -209,6 +205,13 @@ pub enum AstNodeKind {
     FunApp(FunApp),
     FieldAccess(FieldAccess),
     Expression(BinaryOp),
+    // only temporary, for convenient
+    // will not be used in DFS
+    // Vec<AstNode::Id>
+    Ids(Vec<AstNode>),
+    // only temporary
+    // Vec<AstNode::Id>
+    Vars(Vec<AstNode>),
 }
 
 // use Precedence Climbing Method to parse AstNode::Expression
@@ -524,20 +527,24 @@ fn build_ast_from_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
                 kind: AstNodeKind::FunApp(FunApp { method, params }),
             }
         }
-        Rule::fieldAccess => {
-            let mut pair = pair.into_inner();
-            AstNode {
-                line,
-                col,
-                kind: AstNodeKind::FieldAccess(FieldAccess {
-                    name: Box::new(build_ast_from_expr(pair.next().unwrap())),
-                    path: pair.map(|x| x.as_str().to_string()).collect(),
-                }),
-            }
-        }
+        Rule::fieldAccess => build_field_access(pair),
         Rule::expression => parse_expression(pair.into_inner()),
         _ => unreachable!(),
     }
+}
+fn build_field_access(pair: Pair<Rule>) -> AstNode {
+    let (line, col) = pair.as_span().start_pos().line_col();
+    let mut pair = pair.into_inner();
+    let root = build_ast_from_expr(pair.next().unwrap());
+    let pathes: Vec<String> = pair.map(|x| x.as_str().to_string()).collect();
+    pathes.iter().fold(root, |name, path| AstNode {
+        line,
+        col,
+        kind: AstNodeKind::FieldAccess(FieldAccess {
+            name: Box::new(name),
+            path: path.clone(),
+        }),
+    })
 }
 
 #[cfg(test)]
