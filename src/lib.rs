@@ -5,5 +5,7 @@ extern crate pest_derive;
 extern crate lazy_static;
 
 mod ast_parser;
+mod declarationAnalysis;
+mod dfs;
 mod term;
 mod unionFind;

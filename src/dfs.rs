@@ -70,10 +70,10 @@ pub trait DFS {
             }) => {
                 // just some Id, no need to dfs
                 // for parameter in parameters {
-                    // self.dfs(parameter);
+                // self.dfs(parameter);
                 // }
                 // for var in vars {
-                    // self.dfs(var);
+                // self.dfs(var);
                 // }
                 for statement in statements {
                     self.dfs(statement);

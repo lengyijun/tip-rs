@@ -19,12 +19,10 @@ lazy_static! {
 #[grammar = "tip.pest"]
 struct IdentParser;
 
-pub fn parse(input: &str) {
-    let pairs = IdentParser::parse(Rule::program, input).unwrap_or_else(|e| panic!("{}", e));
-    for pair in pairs {
-        let a = build_ast_from_expr(pair);
-        dbg!(a);
-    }
+pub fn parse(input: &str) -> AstNode{
+    let pair = IdentParser::parse(Rule::program, input).unwrap_or_else(|e| panic!("{}", e)).next().unwrap();
+    let a = build_ast_from_expr(pair);
+    a
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
