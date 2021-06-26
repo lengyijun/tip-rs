@@ -1,7 +1,6 @@
-use pest::Parser;
-
 use pest::iterators::{Pair, Pairs};
 use pest::prec_climber::*;
+use pest::Parser;
 
 lazy_static! {
     static ref PREC_CLIMBER: PrecClimber<Rule> = {
@@ -29,124 +28,125 @@ pub fn parse(input: &str) {
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
-struct DirectFieldWrite {
-    id: String,
-    field: String,
+pub struct DirectFieldWrite {
+    pub id: String,
+    pub field: String,
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
-struct IndirectFieldWrite {
+pub struct IndirectFieldWrite {
     // Box<AstNode<Expression>>
-    expr: Box<AstNode>,
-    field: String,
+    pub expr: Box<AstNode>,
+    pub field: String,
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
-struct DerefWrite {
+pub struct DerefWrite {
     // Box<AstNode::Atom>
-    expr: Box<AstNode>,
+    pub expr: Box<AstNode>,
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
-struct Return {
+pub struct Return {
     // Box<AstNode<Expression>>
-    expr: Box<AstNode>,
+    pub expr: Box<AstNode>,
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
-struct Output {
+pub struct Output {
     // Box<AstNode<Expression>>
-    expr: Box<AstNode>,
+    pub expr: Box<AstNode>,
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
-struct Error {
+pub struct Error {
     // Box<AstNode<Expression>>
-    expr: Box<AstNode>,
+    pub expr: Box<AstNode>,
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
-struct Assign {
+pub struct Assign {
     /// AstNode::Id, AstNode::DirectFieldWrite, AstNode::IndirectFieldWrite, AstNode::DerefWrite
-    left: Box<AstNode>,
+    pub left: Box<AstNode>,
     /// AstNode::Expression
-    right: Box<AstNode>,
+    pub right: Box<AstNode>,
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
-struct If {
+pub struct If {
     /// AstNode::Expression
-    guard: Box<AstNode>,
+    pub guard: Box<AstNode>,
     /// most likely AstNode::block
-    if_block: Box<AstNode>,
+    pub if_block: Box<AstNode>,
     /// most likely AstNode::block
-    else_block: Option<Box<AstNode>>,
+    pub else_block: Option<Box<AstNode>>,
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
-struct While {
+pub struct While {
     /// AstNode::Expression
-    guard: Box<AstNode>,
+    pub guard: Box<AstNode>,
     /// most likely AstNode::block
-    block: Box<AstNode>,
+    pub block: Box<AstNode>,
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
-struct Block {
-    exprs: Vec<AstNode>,
+pub struct Block {
+    pub exprs: Vec<AstNode>,
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
-struct Function {
-    name: String,
-    parameters: Box<AstNode>,
+pub struct Function {
+    pub name: String,
+    /// AstNode::Ids
+    pub parameters: Box<AstNode>,
     /// AstNode::Vars
-    vars: Box<AstNode>,
-    statements: Vec<AstNode>,
+    pub vars: Box<AstNode>,
+    pub statements: Vec<AstNode>,
     /// AstNode::Return
-    ret: Box<AstNode>,
+    pub ret: Box<AstNode>,
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
-struct Field {
-    id: String,
+pub struct Field {
+    pub id: String,
     /// AstNode::Expression
-    expression: Box<AstNode>,
+    pub expression: Box<AstNode>,
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
-struct Alloc {
+pub struct Alloc {
     /// AstNode::Expression
-    expr: Box<AstNode>,
+    pub expr: Box<AstNode>,
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
-struct Ref {
+pub struct Ref {
     /// AstNode::Id
-    id: Box<AstNode>,
+    pub id: Box<AstNode>,
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
-struct Deref {
+pub struct Deref {
     /// AstNode::Expression
-    atom: Box<AstNode>,
+    pub atom: Box<AstNode>,
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
-struct FunApp {
-    method: Box<AstNode>,
+pub struct FunApp {
+    pub method: Box<AstNode>,
     /// AstNode::Expression
-    params: Vec<AstNode>,
+    pub params: Vec<AstNode>,
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
-struct FieldAccess {
-    name: Box<AstNode>,
-    path: Vec<String>,
+pub struct FieldAccess {
+    pub name: Box<AstNode>,
+    pub path: Vec<String>,
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
-enum Op {
+pub enum Op {
     Add,
     Subtract,
     Multiply,
@@ -156,16 +156,16 @@ enum Op {
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
-struct BinaryOp {
-    op: Op,
+pub struct BinaryOp {
+    pub op: Op,
     /// AstNode::Atom or AstNode::Expression
-    left: Box<AstNode>,
-    right: Box<AstNode>,
+    pub left: Box<AstNode>,
+    pub right: Box<AstNode>,
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
 pub struct AstNode {
-    kind: AstNodeKind,
+    pub kind: AstNodeKind,
     /// start position
     /// note: different AstNode may share same start position
     line: usize,
