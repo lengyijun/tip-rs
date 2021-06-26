@@ -9,10 +9,12 @@ pub enum Term {
     Mu(Mu),
 }
 
+// TODO
+// Var::fresh()->FreshVarType(usize)?
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
 pub enum Var {
     FreshVarType(FreshVarType),
-    VarType(VarType),
+    VarType(AstNode),
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
@@ -28,9 +30,6 @@ pub enum Cons {
 pub enum Mu {
     RecursiveType(RecursiveType),
 }
-
-#[derive(Debug, Hash, Eq, PartialEq, Clone)]
-pub struct VarType(AstNode);
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
 pub struct FreshVarType(usize);
