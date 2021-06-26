@@ -1,0 +1,5 @@
+# [alias]
+# b=["rustc","--","-Zpolonius"]
+
+[build]
+rustflags = ["-Zpolonius"]
