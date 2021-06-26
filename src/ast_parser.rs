@@ -111,7 +111,7 @@ pub struct Function {
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
 pub struct Field {
-    pub id: String,
+    pub name: String,
     /// AstNode::Expression
     pub expression: Box<AstNode>,
 }
@@ -196,7 +196,7 @@ pub enum AstNodeKind {
     Number(i32),
     Input,
     Field(Field),
-    // AstNode::Field
+    // Vec<AstNode::Field>
     Record(Vec<AstNode>),
     Null,
     Alloc(Alloc),
@@ -481,7 +481,7 @@ fn build_ast_from_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
                 line,
                 col,
                 kind: AstNodeKind::Field(Field {
-                    id: pair.next().unwrap().as_str().to_string(),
+                    name: pair.next().unwrap().as_str().to_string(),
                     expression: Box::new(build_ast_from_expr(pair.next().unwrap())),
                 }),
             }
