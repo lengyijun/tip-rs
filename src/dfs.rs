@@ -2,14 +2,14 @@ use crate::ast_parser::*;
 
 pub trait DFS {
     fn dfs(&mut self, node: &AstNode) {
-        self.visit(node);
+        if !self.visit(node) {
+            return;
+        }
         match node.kind {
             AstNodeKind::Id(_) => {}
-            /// AstNode::Id
-            AstNodeKind::Ids(ref subnodes) => {
-                for subnode in subnodes {
-                    self.dfs(subnode);
-                }
+            AstNodeKind::Ids(_) => {
+                // Ids is temporary
+                unreachable!();
             }
             AstNodeKind::DirectFieldWrite(_) => {}
             AstNodeKind::IndirectFieldWrite(IndirectFieldWrite { ref expr, .. }) => {
@@ -18,11 +18,9 @@ pub trait DFS {
             AstNodeKind::DerefWrite(DerefWrite { ref expr }) => {
                 self.dfs(expr);
             }
-            /// AstNode::Id
-            AstNodeKind::Vars(ref vars) => {
-                for var in vars {
-                    self.dfs(var);
-                }
+            AstNodeKind::Vars(_) => {
+                // Vars is temporary
+                unreachable!();
             }
             AstNodeKind::Return(Return { ref expr }) => {
                 self.dfs(expr);
@@ -70,8 +68,13 @@ pub trait DFS {
                 ref ret,
                 ..
             }) => {
-                self.dfs(parameters);
-                self.dfs(vars);
+                // just some Id, no need to dfs
+                // for parameter in parameters {
+                    // self.dfs(parameter);
+                // }
+                // for var in vars {
+                    // self.dfs(var);
+                // }
                 for statement in statements {
                     self.dfs(statement);
                 }
@@ -127,5 +130,7 @@ pub trait DFS {
         }
     }
 
-    fn visit(&mut self, node: &AstNode) {}
+    /// return true: continue dfs
+    /// return false: stop dfs
+    fn visit(&mut self, node: &AstNode) -> bool;
 }

@@ -29,7 +29,8 @@ pub fn parse(input: &str) {
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
 pub struct DirectFieldWrite {
-    pub id: String,
+    // AstNode::Id
+    pub id: Box<AstNode>,
     pub field: String,
 }
 
@@ -98,10 +99,10 @@ pub struct Block {
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
 pub struct Function {
     pub name: String,
-    /// AstNode::Ids
-    pub parameters: Box<AstNode>,
-    /// AstNode::Vars
-    pub vars: Box<AstNode>,
+    /// Vec<AstNode::Id>
+    pub parameters: Vec<AstNode>,
+    /// Vec<AstNode::Id>
+    pub vars: Vec<AstNode>,
     pub statements: Vec<AstNode>,
     /// AstNode::Return
     pub ret: Box<AstNode>,
@@ -175,12 +176,15 @@ pub struct AstNode {
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
 pub enum AstNodeKind {
     Id(String),
-    /// AstNode::Id
+    /// only temporary, for convenient
+    /// will not be used in DFS
+    /// Vec<AstNode::Id>
     Ids(Vec<AstNode>),
     DirectFieldWrite(DirectFieldWrite),
     IndirectFieldWrite(IndirectFieldWrite),
     DerefWrite(DerefWrite),
-    /// AstNode::Id
+    /// only temporary
+    /// Vec<AstNode::Id>
     Vars(Vec<AstNode>),
     Return(Return),
     Output(Output),
@@ -299,7 +303,7 @@ fn build_ast_from_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
                 line,
                 col,
                 kind: AstNodeKind::DirectFieldWrite(DirectFieldWrite {
-                    id: pair.next().unwrap().as_str().into(),
+                    id: Box::new(build_ast_from_expr(pair.next().unwrap())),
                     field: pair.next().unwrap().as_str().into(),
                 }),
             }
@@ -421,8 +425,18 @@ fn build_ast_from_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
         Rule::function => {
             let mut pair = pair.into_inner();
             let name = pair.next().unwrap().as_str().to_string();
-            let parameters = Box::new(build_ast_from_expr(pair.next().unwrap()));
+            let ids = Box::new(build_ast_from_expr(pair.next().unwrap()));
+            let parameters = if let AstNodeKind::Ids(parameters) = ids.kind {
+                parameters
+            } else {
+                unreachable!();
+            };
             let vars = Box::new(build_ast_from_expr(pair.next().unwrap()));
+            let vars = if let AstNodeKind::Vars(vars) = vars.kind {
+                vars
+            } else {
+                unreachable!();
+            };
             let mut statements: Vec<AstNode> = pair.map(build_ast_from_expr).collect();
             let ret = Box::new(statements.pop().unwrap());
             AstNode {
