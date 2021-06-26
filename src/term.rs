@@ -9,8 +9,8 @@ pub enum Term {
     Mu(Mu),
 }
 
-impl Term{
-    fn freshVar()->Self{
+impl Term {
+    fn freshVar() -> Self {
         static mut INDEX: usize = 0;
         unsafe {
             INDEX += 1;

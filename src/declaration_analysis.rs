@@ -40,7 +40,6 @@ impl DFS for DeclarationAnalysis {
                 }
                 return true;
             }
-            /// AstNode::Function
             AstNodeKind::Program(ref functions) => {
                 for function in functions {
                     if let AstNodeKind::Function(Function { ref name, .. }) = function.kind {
@@ -72,11 +71,11 @@ impl DFS for DeclarationAnalysis {
 
 #[cfg(test)]
 mod tests {
+    use crate::declaration_analysis::parse;
+    use crate::declaration_analysis::DeclarationAnalysis;
+    use crate::dfs::DFS;
     use std::collections::HashMap;
     use std::fs;
-    use crate::declaration_analysis::DeclarationAnalysis;
-    use crate::declaration_analysis::parse;
-    use crate::dfs::DFS;
 
     #[test]
     fn test_fib_declar() -> std::io::Result<()> {

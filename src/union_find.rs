@@ -22,7 +22,7 @@ impl UnionFindSolver {
                 self.0.insert(v2.clone(), v1.clone());
             }
             (Term::Cons(c1), Term::Cons(c2)) => match (c1, c2) {
-                (Cons::IntType(_), Cons::IntType(_)) => {}
+                (Cons::IntType, Cons::IntType) => {}
                 (Cons::FunctionType(f1), Cons::FunctionType(f2)) => {
                     self.union(&f1.ret, &f2.ret);
                     for (p1, p2) in f1.params.iter().zip(f1.params.iter()) {
