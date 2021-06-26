@@ -10,12 +10,12 @@ struct DeclarationAnalysis {
 }
 
 impl DFS for DeclarationAnalysis {
-    fn visit(&mut self, node: &AstNode)->bool {
+    fn visit(&mut self, node: &AstNode) -> bool {
         match node.kind {
             // only usage go to here
-            // no declaration go to here
+            // no var,paramter go to here
             AstNodeKind::Id(ref name) => {
-                let root= self.env.get(name).unwrap().clone();
+                let root = self.env.get(name).unwrap().clone();
                 self.decl.insert(node.clone(), root);
                 return false;
             }
@@ -43,20 +43,20 @@ impl DFS for DeclarationAnalysis {
             /// AstNode::Function
             AstNodeKind::Program(ref functions) => {
                 for function in functions {
-                    if let AstNodeKind::Function(Function{ref name,..})=function.kind{
+                    if let AstNodeKind::Function(Function { ref name, .. }) = function.kind {
                         self.env.insert(name.clone(), node.clone());
-                    }else{
+                    } else {
                         unreachable!();
                     }
                 }
                 for function in functions {
-                    let mut declarationAnalysis = DeclarationAnalysis {
+                    let mut declaration_analysis = DeclarationAnalysis {
                         env: self.env.clone(),
                         decl: HashMap::new(),
                     };
-                    declarationAnalysis.dfs(function);
+                    declaration_analysis.dfs(function);
                     // merge
-                    for (key, value) in declarationAnalysis.decl {
+                    for (key, value) in declaration_analysis.decl {
                         self.decl.insert(key, value);
                     }
                 }
@@ -67,5 +67,28 @@ impl DFS for DeclarationAnalysis {
                 return true;
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+    use std::fs;
+    use crate::declaration_analysis::DeclarationAnalysis;
+    use crate::declaration_analysis::parse;
+    use crate::dfs::DFS;
+
+    #[test]
+    fn test_fib_declar() -> std::io::Result<()> {
+        let path = "/home/lyj/TIP/examples/fib.tip";
+        let content = &fs::read_to_string(&path)?;
+        let program = parse(&content);
+        let mut declaration_analysis = DeclarationAnalysis {
+            decl: HashMap::new(),
+            env: HashMap::new(),
+        };
+        declaration_analysis.dfs(&program);
+        dbg!(declaration_analysis.decl);
+        Ok(())
     }
 }

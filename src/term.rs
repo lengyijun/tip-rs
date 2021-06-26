@@ -36,10 +36,10 @@ pub struct VarType(AstNode);
 pub struct FreshVarType(usize);
 impl FreshVarType {
     fn new() -> Self {
-        static mut index: usize = 0;
+        static mut INDEX: usize = 0;
         unsafe {
-            index += 1;
-            Self(index)
+            INDEX += 1;
+            Self(INDEX)
         }
     }
 }
@@ -70,14 +70,17 @@ pub struct RecordType {
 }
 impl RecordType {
     fn new(input: Vec<String>) -> Self {
-        static mut index: usize = 0;
+        static mut INDEX: usize = 0;
         let mut fields = HashMap::new();
         for x in input {
             fields.insert(x, Term::Var(Var::FreshVarType(FreshVarType::new())));
         }
         unsafe {
-            index += 1;
-            RecordType { index, fields }
+            INDEX += 1;
+            RecordType {
+                index: INDEX,
+                fields,
+            }
         }
     }
 }
