@@ -3,9 +3,9 @@ use crate::term::Cons;
 use crate::term::Term;
 use std::collections::HashMap;
 
-pub struct UnionFind(HashMap<Term, Term>);
+pub struct UnionFindSolver(HashMap<Term, Term>);
 
-impl UnionFind {
+impl UnionFindSolver {
     pub fn union(&mut self, k1: &Term, k2: &Term) {
         let v1: Term = self.find(k1).clone();
         let v2: Term = self.find(k2).clone();
