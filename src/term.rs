@@ -9,17 +9,25 @@ pub enum Term {
     Mu(Mu),
 }
 
-// TODO
-// Var::fresh()->FreshVarType(usize)?
+impl Term{
+    fn freshVar()->Self{
+        static mut INDEX: usize = 0;
+        unsafe {
+            INDEX += 1;
+            Term::Var(Var::FreshVarType(INDEX))
+        }
+    }
+}
+
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
 pub enum Var {
-    FreshVarType(FreshVarType),
+    FreshVarType(usize),
     VarType(AstNode),
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
 pub enum Cons {
-    IntType(IntType),
+    IntType,
     FunctionType(FunctionType),
     PointerType(PointerType),
     RecordType(RecordType),
@@ -30,21 +38,6 @@ pub enum Cons {
 pub enum Mu {
     RecursiveType(RecursiveType),
 }
-
-#[derive(Debug, Hash, Eq, PartialEq, Clone)]
-pub struct FreshVarType(usize);
-impl FreshVarType {
-    fn new() -> Self {
-        static mut INDEX: usize = 0;
-        unsafe {
-            INDEX += 1;
-            Self(INDEX)
-        }
-    }
-}
-
-#[derive(Debug, Hash, Eq, PartialEq, Clone)]
-pub struct IntType;
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
 pub struct FunctionType {
@@ -72,7 +65,7 @@ impl RecordType {
         static mut INDEX: usize = 0;
         let mut fields = HashMap::new();
         for x in input {
-            fields.insert(x, Term::Var(Var::FreshVarType(FreshVarType::new())));
+            fields.insert(x, Term::freshVar());
         }
         unsafe {
             INDEX += 1;
