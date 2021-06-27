@@ -17,13 +17,13 @@ impl UnionFindSolver {
         let v2_clone = v2.clone();
         match (v1_clone, v2_clone) {
             (Term::Var(_), Term::Var(_)) => {
-                self.0.insert(v1.clone(), v2.clone());
+                self.0.insert(v1, v2);
             }
             (Term::Var(_), _) => {
-                self.0.insert(v1.clone(), v2.clone());
+                self.0.insert(v1, v2);
             }
             (_, Term::Var(_)) => {
-                self.0.insert(v2.clone(), v1.clone());
+                self.0.insert(v2, v1);
             }
             (Term::Cons(c1), Term::Cons(c2)) => match (c1, c2) {
                 (Cons::IntType, Cons::IntType) => {}

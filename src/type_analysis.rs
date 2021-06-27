@@ -112,6 +112,7 @@ impl DFS for TypeAnalysis {
                 ref ret,
                 ..
             }) => {
+                // TODO main return Int
                 let ft = FunctionType {
                     params: parameters.iter().map(|x| self.astNode2Term(x)).collect(),
                     ret: Box::new(self.astNode2Term(ret)),
