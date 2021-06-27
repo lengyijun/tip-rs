@@ -216,5 +216,24 @@ impl DFS for TypeAnalysis {
 
     fn finish(self) -> Self::ResultType {
         self.union_find.solution()
+        // TODO
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::ast_parser::parse;
+    use crate::dfs::DFS;
+    use crate::type_analysis::TypeAnalysis;
+    use std::fs;
+
+    #[test]
+    fn test_fib_type() -> std::io::Result<()> {
+        let path = "/home/lyj/TIP/examples/fib.tip";
+        let content = fs::read_to_string(&path)?;
+        let program = parse(&content);
+        let res = TypeAnalysis::work(&program);
+        dbg!(res);
+        Ok(())
     }
 }

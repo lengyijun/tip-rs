@@ -84,7 +84,7 @@ impl DFS for DeclarationAnalysis {
 
 #[cfg(test)]
 mod tests {
-    use crate::declaration_analysis::parse;
+    use crate::ast_parser::parse;
     use crate::declaration_analysis::DeclarationAnalysis;
     use crate::dfs::DFS;
     use std::collections::HashMap;
@@ -93,7 +93,7 @@ mod tests {
     #[test]
     fn test_fib_declar() -> std::io::Result<()> {
         let path = "/home/lyj/TIP/examples/fib.tip";
-        let content = &fs::read_to_string(&path)?;
+        let content = fs::read_to_string(&path)?;
         let program = parse(&content);
         let mut declaration_analysis = DeclarationAnalysis {
             decl: HashMap::new(),
