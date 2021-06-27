@@ -2,12 +2,14 @@ use crate::ast_parser::*;
 use crate::term::*;
 use crate::dfs::DFS;
 use crate::union_find::UnionFindSolver;
+use crate::field_collector::FieldCollector;
 use std::collections::HashMap;
 
 struct TypeAnalysis {
     union_find: UnionFindSolver,
     // generate from DeclarationAnalysis
     decl: HashMap<AstNode, AstNode>,
+    all_fields:Vec<String>,
 }
 
 impl TypeAnalysis{

@@ -10,6 +10,8 @@ struct DeclarationAnalysis {
 }
 
 impl DFS for DeclarationAnalysis {
+    type ResultType=HashMap<AstNode,AstNode>;
+
     fn visit(&mut self, node: &AstNode) -> bool {
         match node.kind {
             // only usage go to here
@@ -67,6 +69,11 @@ impl DFS for DeclarationAnalysis {
             }
         }
     }
+
+    fn finish(self)->Self::ResultType{
+        self.decl
+    }
+
 }
 
 #[cfg(test)]

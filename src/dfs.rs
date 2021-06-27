@@ -1,6 +1,8 @@
 use crate::ast_parser::*;
 
 pub trait DFS {
+    type ResultType;
+
     fn dfs(&mut self, node: &AstNode) {
         if !self.visit(node) {
             return;
@@ -129,4 +131,6 @@ pub trait DFS {
     /// return true: continue dfs
     /// return false: stop dfs
     fn visit(&mut self, node: &AstNode) -> bool;
+
+    fn finish(self)->Self::ResultType;
 }
