@@ -3,6 +3,7 @@ use crate::ast_parser::*;
 pub trait DFS {
     type ResultType;
 
+    // visit children
     fn dfs(&mut self, node: &AstNode) {
         if !self.visit(node) {
             return;
@@ -82,7 +83,7 @@ pub trait DFS {
                 }
                 self.dfs(ret);
             }
-            /// AstNode::Function
+            // AstNode::Function
             AstNodeKind::Program(ref functions) => {
                 for function in functions {
                     self.dfs(function);
@@ -132,5 +133,16 @@ pub trait DFS {
     /// return false: stop dfs
     fn visit(&mut self, node: &AstNode) -> bool;
 
-    fn finish(self)->Self::ResultType;
+    fn finish(self) -> Self::ResultType;
+
+    fn work(node: &AstNode) -> Self::ResultType
+    where
+        Self: Sized,
+    {
+        let mut m = Self::new(node);
+        m.dfs(node);
+        m.finish()
+    }
+
+    fn new(node: &AstNode) -> Self;
 }

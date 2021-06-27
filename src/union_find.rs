@@ -6,6 +6,10 @@ use std::collections::HashMap;
 pub struct UnionFindSolver(HashMap<Term, Term>);
 
 impl UnionFindSolver {
+    pub fn new() -> Self {
+        Self(HashMap::new())
+    }
+
     pub fn union(&mut self, k1: &Term, k2: &Term) {
         let v1: Term = self.find(k1).clone();
         let v2: Term = self.find(k2).clone();
@@ -68,5 +72,15 @@ impl UnionFindSolver {
                 self.0.get(key).unwrap()
             }
         }
+    }
+
+    pub fn solution(mut self) -> HashMap<Term, Term> {
+        let mut h = HashMap::new();
+        let keys: Vec<Term> = self.0.keys().map(|x| x.clone()).collect();
+        for k in keys {
+            let v = self.find(&k).clone();
+            h.insert(k, v);
+        }
+        h
     }
 }

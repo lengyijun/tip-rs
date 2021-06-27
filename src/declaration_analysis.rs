@@ -2,7 +2,7 @@ use crate::ast_parser::*;
 use crate::dfs::DFS;
 use std::collections::HashMap;
 
-struct DeclarationAnalysis {
+pub struct DeclarationAnalysis {
     /// env is temporary
     env: HashMap<String, AstNode>,
     /// decl is result
@@ -10,7 +10,14 @@ struct DeclarationAnalysis {
 }
 
 impl DFS for DeclarationAnalysis {
-    type ResultType=HashMap<AstNode,AstNode>;
+    type ResultType = HashMap<AstNode, AstNode>;
+
+    fn new(_: &AstNode) -> Self {
+        Self {
+            env: HashMap::new(),
+            decl: HashMap::new(),
+        }
+    }
 
     fn visit(&mut self, node: &AstNode) -> bool {
         match node.kind {
@@ -70,10 +77,9 @@ impl DFS for DeclarationAnalysis {
         }
     }
 
-    fn finish(self)->Self::ResultType{
+    fn finish(self) -> Self::ResultType {
         self.decl
     }
-
 }
 
 #[cfg(test)]

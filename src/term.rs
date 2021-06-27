@@ -10,7 +10,7 @@ pub enum Term {
 }
 
 impl Term {
-    fn fresh_var() -> Self {
+    pub fn fresh_var() -> Self {
         static mut INDEX: usize = 0;
         unsafe {
             INDEX += 1;
@@ -61,7 +61,7 @@ pub struct RecordType {
     index: usize,
 }
 impl RecordType {
-    fn new() -> Self {
+    pub fn new() -> Self {
         static mut INDEX: usize = 0;
         unsafe {
             INDEX += 1;
