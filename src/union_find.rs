@@ -42,7 +42,7 @@ impl UnionFindSolver {
                         self.union(&r1.fields[key], &r2.fields[key]);
                     }
                 }
-                (Cons::AbsentFieldType(_), Cons::AbsentFieldType(_)) => {}
+                (Cons::AbsentFieldType, Cons::AbsentFieldType) => {}
                 (_, _) => {
                     unreachable!();
                 }

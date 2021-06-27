@@ -31,7 +31,8 @@ pub enum Cons {
     FunctionType(FunctionType),
     PointerType(PointerType),
     RecordType(RecordType),
-    AbsentFieldType(AbsentFieldType),
+    // used in RecordType. If a field can't infer type
+    AbsentFieldType,
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
@@ -78,10 +79,6 @@ impl Hash for RecordType {
         self.index.hash(state);
     }
 }
-
-// used in RecordType. If a field can't infer type
-#[derive(Debug, Hash, Eq, PartialEq, Clone)]
-pub struct AbsentFieldType;
 
 // TODO
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
