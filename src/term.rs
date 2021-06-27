@@ -10,7 +10,7 @@ pub enum Term {
 }
 
 impl Term {
-    fn freshVar() -> Self {
+    fn fresh_var() -> Self {
         static mut INDEX: usize = 0;
         unsafe {
             INDEX += 1;
@@ -61,17 +61,13 @@ pub struct RecordType {
     index: usize,
 }
 impl RecordType {
-    fn new(input: Vec<String>) -> Self {
+    fn new() -> Self {
         static mut INDEX: usize = 0;
-        let mut fields = HashMap::new();
-        for x in input {
-            fields.insert(x, Term::freshVar());
-        }
         unsafe {
             INDEX += 1;
             RecordType {
                 index: INDEX,
-                fields,
+                fields: HashMap::new(),
             }
         }
     }
