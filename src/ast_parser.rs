@@ -195,9 +195,8 @@ pub enum AstNodeKind {
     Program(Vec<AstNode>),
     Number(i32),
     Input,
-    Field(Field),
     // Vec<AstNode::Field>
-    Record(Vec<AstNode>),
+    Record(Vec<Field>),
     Null,
     Alloc(Alloc),
     Ref(Ref),
@@ -475,22 +474,22 @@ fn build_ast_from_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
             col,
             kind: AstNodeKind::Input,
         },
-        Rule::field => {
+        Rule::record => {
             let mut pair = pair.into_inner();
+            let mut v = vec![];
+            while let Some(name) = pair.next() {
+                let f = Field {
+                    name: name.as_str().to_string(),
+                    expression: Box::new(build_ast_from_expr(pair.next().unwrap())),
+                };
+                v.push(f);
+            }
             AstNode {
                 line,
                 col,
-                kind: AstNodeKind::Field(Field {
-                    name: pair.next().unwrap().as_str().to_string(),
-                    expression: Box::new(build_ast_from_expr(pair.next().unwrap())),
-                }),
+                kind: AstNodeKind::Record(v),
             }
         }
-        Rule::record => AstNode {
-            line,
-            col,
-            kind: AstNodeKind::Record(pair.into_inner().map(build_ast_from_expr).collect()),
-        },
         Rule::null => AstNode {
             line,
             col,

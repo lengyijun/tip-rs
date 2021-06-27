@@ -88,13 +88,9 @@ pub trait DFS {
             }
             AstNodeKind::Number(_) => {}
             AstNodeKind::Input => {}
-            AstNodeKind::Field(Field { ref expression, .. }) => {
-                self.dfs(expression);
-            }
-            /// AstNode::Field
             AstNodeKind::Record(ref fields) => {
                 for field in fields {
-                    self.dfs(field);
+                    self.dfs(&field.expression);
                 }
             }
             AstNodeKind::Null => {}

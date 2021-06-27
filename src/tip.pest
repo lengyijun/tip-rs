@@ -54,7 +54,7 @@ atom = _{
 
 input={"input"}
 
-field ={id ~ ":" ~ expression}
+field =_{id ~ ":" ~ expression}
 // struct
 record = {"{" ~ field ~ ("," ~ field)* ~ "}"}
 
