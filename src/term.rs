@@ -1,12 +1,29 @@
 use crate::ast_parser::AstNode;
 use std::collections::HashMap;
+use std::fmt;
 use std::hash::{Hash, Hasher};
 
-#[derive(Debug, Hash, Eq, PartialEq, Clone)]
+#[derive(Hash, Eq, PartialEq, Clone)]
 pub enum Term {
     Var(Var),
     Cons(Cons),
     Mu(Mu),
+}
+impl fmt::Debug for Term {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Term::Var(v) => {
+                f.write_fmt(format_args!("{:?}", v))?;
+            }
+            Term::Cons(c) => {
+                f.write_fmt(format_args!("{:?}", c))?;
+            }
+            Term::Mu(m) => {
+                f.write_fmt(format_args!("{:?}", m))?;
+            }
+        }
+        Ok(())
+    }
 }
 
 impl Term {
@@ -19,13 +36,27 @@ impl Term {
     }
 }
 
-#[derive(Debug, Hash, Eq, PartialEq, Clone)]
+#[derive(Hash, Eq, PartialEq, Clone)]
 pub enum Var {
     FreshVarType(usize),
     VarType(AstNode),
 }
 
-#[derive(Debug, Hash, Eq, PartialEq, Clone)]
+impl fmt::Debug for Var {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Var::FreshVarType(id) => {
+                f.write_fmt(format_args!("x{}", id))?;
+            }
+            Var::VarType(node) => {
+                f.write_fmt(format_args!("{:?}", node))?;
+            }
+        }
+        Ok(())
+    }
+}
+
+#[derive(Hash, Eq, PartialEq, Clone)]
 pub enum Cons {
     IntType,
     FunctionType(FunctionType),
@@ -33,6 +64,29 @@ pub enum Cons {
     RecordType(RecordType),
     // used in RecordType. If a field can't infer type
     AbsentFieldType,
+}
+
+impl fmt::Debug for Cons {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Cons::IntType => {
+                f.write_str("IntType")?;
+            }
+            Cons::FunctionType(ft) => {
+                f.write_fmt(format_args!("{:?}", ft))?;
+            }
+            Cons::PointerType(pt) => {
+                f.write_fmt(format_args!("{:?}", pt))?;
+            }
+            Cons::RecordType(rt) => {
+                f.write_fmt(format_args!("{:?}", rt))?;
+            }
+            Cons::AbsentFieldType => {
+                f.write_str("AbsentFieldType")?;
+            }
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
