@@ -66,6 +66,39 @@ pub enum Cons {
     AbsentFieldType,
 }
 
+impl Cons {
+    /// t is Term::Var(..)
+    pub fn contain(&self, t: &Term) -> bool {
+        match self {
+            Cons::IntType => false,
+            Cons::FunctionType(FunctionType {
+                ref params,
+                ref ret,
+            }) => {
+                if t == (ret as &Term) {
+                    return true;
+                }
+                for p in params {
+                    if p == t {
+                        return true;
+                    }
+                }
+                false
+            }
+            Cons::PointerType(PointerType { ref of }) => t == (of as &Term),
+            Cons::RecordType(RecordType { ref fields, .. }) => {
+                for f in fields.values() {
+                    if f == t {
+                        return true;
+                    }
+                }
+                false
+            }
+            Cons::AbsentFieldType => false,
+        }
+    }
+}
+
 impl fmt::Debug for Cons {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
