@@ -4,7 +4,7 @@ use crate::dfs::DFS;
 use crate::field_collector::FieldCollector;
 use crate::term::*;
 use crate::union_find::UnionFindSolver;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 struct TypeAnalysis {
     union_find: UnionFindSolver,
@@ -216,9 +216,96 @@ impl DFS for TypeAnalysis {
     }
 
     fn finish(self) -> Self::ResultType {
-        self.union_find.solution()
-        // TODO
+        let env = self.union_find.solution();
+        let mut res: HashMap<Term, Term> = HashMap::new();
+        let mut fresh_vars = HashMap::<Term, Term>::new();
+        for (k, v) in &env {
+            if let Term::Var(Var::VarType(n)) = k {
+                if let AstNodeKind::Id(_) = n.kind {
+                    let x = close(&v, &env, &mut fresh_vars);
+                    res.insert(k.clone(), x);
+                }else if let AstNodeKind::Function(_)=n.kind{
+                    let x = close(&v, &env, &mut fresh_vars);
+                    res.insert(k.clone(), x);
+                }
+            }
+        }
+        res
     }
+
+}
+
+fn close_rec(
+    t: &Term,
+    env: &HashMap<Term, Term>,
+    fresh_vars: &mut HashMap<Term, Term>,
+    mut visited: HashSet<Term>,
+) -> Term {
+    match t {
+        Term::Var(var) => {
+            let t_par = env.get(t).unwrap();
+            // TODO
+            // I think never go to here
+            if t_par == t {
+                unreachable!();
+            }
+            match visited.get(t) {
+                Some(_) => match fresh_vars.get(t) {
+                    Some(res) => res.clone(),
+                    None => {
+                        fresh_vars.insert(t.clone(), Term::fresh_var());
+                        fresh_vars.get(t).unwrap().clone()
+                    }
+                },
+                None => {
+                    visited.insert(t.clone());
+                    let cterm = close_rec(t_par, env, fresh_vars, visited);
+                    if let Some(f) = fresh_vars.get(t) {
+                        if let Term::Cons(c) = f {
+                            if c.contain(t) {
+                                // TODO
+                                // recursive type
+                            }
+                        }
+                    }
+                    cterm
+                }
+            }
+        }
+        Term::Cons(c) => match c {
+            Cons::IntType => Term::Cons(Cons::IntType),
+            Cons::AbsentFieldType => Term::Cons(Cons::AbsentFieldType),
+            Cons::FunctionType(ft) => {
+                let mut ft_clone = ft.clone();
+                for (i, p) in ft.params.iter().enumerate() {
+                    ft_clone.params[i] = close_rec(p, env, fresh_vars, visited.clone());
+                }
+                ft_clone.ret = Box::new(close_rec(&ft.ret, env, fresh_vars, visited.clone()));
+                Term::Cons(Cons::FunctionType(ft_clone))
+            }
+            Cons::PointerType(PointerType { ref of }) => {
+                let pt_clone = PointerType {
+                    of: Box::new(close_rec(of, env, fresh_vars, visited.clone())),
+                };
+                Term::Cons(Cons::PointerType(pt_clone))
+            }
+            Cons::RecordType(RecordType { fields, .. }) => {
+                let mut res = RecordType::new();
+                for (k, v) in fields {
+                    res.fields
+                        .insert(k.to_string(), close_rec(v, env, fresh_vars, visited.clone()));
+                }
+                Term::Cons(Cons::RecordType(res))
+            }
+        },
+        Term::Mu(_) => {
+            unimplemented!();
+        }
+    }
+}
+
+fn close(t: &Term, env: &HashMap<Term, Term>, fresh_vars: &mut HashMap<Term, Term>) -> Term {
+    close_rec(t, env, fresh_vars, HashSet::new())
 }
 
 #[cfg(test)]
