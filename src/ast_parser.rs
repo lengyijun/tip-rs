@@ -49,12 +49,6 @@ pub struct DerefWrite {
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
-pub struct Return {
-    // Box<AstNode<Expression>>
-    pub expr: Box<AstNode>,
-}
-
-#[derive(Debug, Hash, Eq, PartialEq, Clone)]
 pub struct Output {
     // Box<AstNode<Expression>>
     pub expr: Box<AstNode>,
@@ -105,7 +99,7 @@ pub struct Function {
     /// Vec<AstNode::Id>
     pub vars: Vec<AstNode>,
     pub statements: Vec<AstNode>,
-    /// AstNode::Return
+    /// a expression
     pub ret: Box<AstNode>,
 }
 
@@ -183,7 +177,6 @@ pub enum AstNodeKind {
     DirectFieldWrite(DirectFieldWrite),
     IndirectFieldWrite(IndirectFieldWrite),
     DerefWrite(DerefWrite),
-    Return(Return),
     Output(Output),
     Error(Error),
     Assign(Assign),
@@ -349,16 +342,6 @@ fn build_ast_from_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
                     .collect(),
             ),
         },
-        Rule::return_expr => {
-            let mut pair = pair.into_inner();
-            AstNode {
-                line,
-                col,
-                kind: AstNodeKind::Return(Return {
-                    expr: Box::new(parse_expression(pair.next().unwrap().into_inner())),
-                }),
-            }
-        }
         Rule::output => {
             let mut pair = pair.into_inner();
             AstNode {

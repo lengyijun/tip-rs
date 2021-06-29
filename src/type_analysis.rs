@@ -49,7 +49,6 @@ impl DFS for TypeAnalysis {
             AstNodeKind::DirectFieldWrite(_) => {}
             AstNodeKind::IndirectFieldWrite(_) => {}
             AstNodeKind::DerefWrite(_) => {}
-            AstNodeKind::Return(_) => {}
             AstNodeKind::Output(Output { expr }) => {
                 self.union_find
                     .union(&self.astNode2Term(&expr), &Term::Cons(Cons::IntType));
@@ -110,12 +109,19 @@ impl DFS for TypeAnalysis {
             AstNodeKind::Function(Function {
                 ref parameters,
                 ref ret,
+                name,
                 ..
             }) => {
-                // TODO main return Int
-                let ft = FunctionType {
-                    params: parameters.iter().map(|x| self.astNode2Term(x)).collect(),
-                    ret: Box::new(self.astNode2Term(ret)),
+                let ft = if name == "main" {
+                    FunctionType {
+                        params: parameters.iter().map(|x| self.astNode2Term(x)).collect(),
+                        ret: Box::new(Term::Cons(Cons::IntType)),
+                    }
+                } else {
+                    FunctionType {
+                        params: parameters.iter().map(|x| self.astNode2Term(x)).collect(),
+                        ret: Box::new(self.astNode2Term(ret)),
+                    }
                 };
                 self.union_find.union(
                     &Term::Cons(Cons::FunctionType(ft)),
@@ -224,7 +230,7 @@ impl DFS for TypeAnalysis {
                 if let AstNodeKind::Id(_) = n.kind {
                     let x = close(&v, &env, &mut fresh_vars);
                     res.insert(k.clone(), x);
-                }else if let AstNodeKind::Function(_)=n.kind{
+                } else if let AstNodeKind::Function(_) = n.kind {
                     let x = close(&v, &env, &mut fresh_vars);
                     res.insert(k.clone(), x);
                 }
@@ -232,7 +238,6 @@ impl DFS for TypeAnalysis {
         }
         res
     }
-
 }
 
 fn close_rec(
@@ -244,20 +249,8 @@ fn close_rec(
     match t {
         Term::Var(var) => {
             let t_par = env.get(t).unwrap();
-            // TODO
-            // I think never go to here
-            if t_par == t {
-                unreachable!();
-            }
-            match visited.get(t) {
-                Some(_) => match fresh_vars.get(t) {
-                    Some(res) => res.clone(),
-                    None => {
-                        fresh_vars.insert(t.clone(), Term::fresh_var());
-                        fresh_vars.get(t).unwrap().clone()
-                    }
-                },
-                None => {
+            match (visited.get(t), t_par == t) {
+                (None, false) => {
                     visited.insert(t.clone());
                     let cterm = close_rec(t_par, env, fresh_vars, visited);
                     if let Some(f) = fresh_vars.get(t) {
@@ -270,6 +263,13 @@ fn close_rec(
                     }
                     cterm
                 }
+                _ => match fresh_vars.get(t) {
+                    Some(res) => res.clone(),
+                    None => {
+                        fresh_vars.insert(t.clone(), Term::fresh_var());
+                        fresh_vars.get(t).unwrap().clone()
+                    }
+                },
             }
         }
         Term::Cons(c) => match c {
@@ -292,8 +292,10 @@ fn close_rec(
             Cons::RecordType(RecordType { fields, .. }) => {
                 let mut res = RecordType::new();
                 for (k, v) in fields {
-                    res.fields
-                        .insert(k.to_string(), close_rec(v, env, fresh_vars, visited.clone()));
+                    res.fields.insert(
+                        k.to_string(),
+                        close_rec(v, env, fresh_vars, visited.clone()),
+                    );
                 }
                 Term::Cons(Cons::RecordType(res))
             }

@@ -15,7 +15,6 @@ derefWrite={ "*" ~ expression}
   assignableExpression=_{id | directFieldWrite | indirectFieldWrite | derefWrite}
 
 vars = { ("var" ~ ids ~ ";")* }
-return_expr = { "return" ~ expression ~ ";"}
 output = { "output" ~ expression ~ ";"}
 error  = { "error" ~ expression ~ ";"}
     assign = { assignableExpression ~ "=" ~ expression ~ ";"}
@@ -33,7 +32,9 @@ function = {
   ~ "{"
   ~ vars
   ~ statement*
-  ~ return_expr
+  ~ "return"
+  ~ expression
+  ~ ";"
   ~ "}"
 }
 

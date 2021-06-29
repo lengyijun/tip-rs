@@ -25,9 +25,6 @@ pub trait DFS {
                 // Vars is temporary
                 unreachable!();
             }
-            AstNodeKind::Return(Return { ref expr }) => {
-                self.dfs(expr);
-            }
             AstNodeKind::Output(Output { ref expr }) => {
                 self.dfs(expr);
             }
