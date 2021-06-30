@@ -124,8 +124,8 @@ impl DFS for TypeAnalysis {
                     }
                 };
                 self.union_find.union(
-                    &Term::Cons(Cons::FunctionType(ft)),
                     &self.astNode2Term(node),
+                    &Term::Cons(Cons::FunctionType(ft)),
                 );
             }
             AstNodeKind::Program(_) => {}
@@ -182,8 +182,10 @@ impl DFS for TypeAnalysis {
                 ref method,
                 ref params,
             }) => {
+                let params_output: Vec<Term> =
+                    params.iter().map(|x| self.astNode2Term(x)).collect();
                 let ft = FunctionType {
-                    params: vec![Term::fresh_var(); params.len()],
+                    params: params_output,
                     ret: Box::new(Term::fresh_var()),
                 };
                 self.union_find.union(&self.astNode2Term(node), &ft.ret);
@@ -248,14 +250,18 @@ fn close_rec(
 ) -> Term {
     match t {
         Term::Var(var) => {
-            let t_par = env.get(t).unwrap();
-            match (visited.get(t), t_par == t) {
-                (None, false) => {
+            let (t_par, b) = match env.get(t) {
+                Some(t_par) => (Some(t_par), t_par != t),
+                None => (None, false),
+            };
+            match (visited.get(t), b) {
+                (None, true) => {
                     visited.insert(t.clone());
-                    let cterm = close_rec(t_par, env, fresh_vars, visited);
+                    let cterm = close_rec(t_par.unwrap(), env, fresh_vars, visited);
                     if let Some(f) = fresh_vars.get(t) {
-                        if let Term::Cons(c) = f {
-                            if c.contain(t) {
+                        if let Term::Cons(ref c) = cterm {
+                            if c.contain(f) {
+                                unimplemented!();
                                 // TODO
                                 // recursive type
                             }
@@ -276,12 +282,14 @@ fn close_rec(
             Cons::IntType => Term::Cons(Cons::IntType),
             Cons::AbsentFieldType => Term::Cons(Cons::AbsentFieldType),
             Cons::FunctionType(ft) => {
-                let mut ft_clone = ft.clone();
-                for (i, p) in ft.params.iter().enumerate() {
-                    ft_clone.params[i] = close_rec(p, env, fresh_vars, visited.clone());
+                let mut params = vec![];
+                for p in &ft.params {
+                    params.push(close_rec(p, env, fresh_vars, visited.clone()));
                 }
-                ft_clone.ret = Box::new(close_rec(&ft.ret, env, fresh_vars, visited.clone()));
-                Term::Cons(Cons::FunctionType(ft_clone))
+                Term::Cons(Cons::FunctionType(FunctionType {
+                    params,
+                    ret: Box::new(close_rec(&ft.ret, env, fresh_vars, visited.clone())),
+                }))
             }
             Cons::PointerType(PointerType { ref of }) => {
                 let pt_clone = PointerType {
@@ -318,12 +326,29 @@ mod tests {
     use std::fs;
 
     #[test]
-    fn test_fib_type() -> std::io::Result<()> {
-        let path = "/home/lyj/TIP/examples/fib.tip";
+    fn test_single_type_analysis() -> std::io::Result<()> {
+        // let path = "/home/lyj/TIP/examples/fib.tip";
+        // let path = "/home/lyj/TIP/examples/mono2.tip";
+        let path = "/home/lyj/TIP/examples/foo.tip";
         let content = fs::read_to_string(&path)?;
         let program = parse(&content);
         let res = TypeAnalysis::work(&program);
         dbg!(res);
+        Ok(())
+    }
+
+    #[test]
+    fn test_type_analysis() -> std::io::Result<()> {
+        for entry in fs::read_dir("/home/lyj/TIP/examples")? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_file() {
+                let content = &fs::read_to_string(&path)?;
+                dbg!(&path);
+                let program = parse(&content);
+                let res = TypeAnalysis::work(&program);
+            }
+        }
         Ok(())
     }
 }

@@ -9,6 +9,7 @@ pub enum Term {
     Cons(Cons),
     Mu(Mu),
 }
+
 impl fmt::Debug for Term {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -36,6 +37,7 @@ impl Term {
     }
 }
 
+// TODO 为了Mu,把FreshVarType提炼出来？
 #[derive(Hash, Eq, PartialEq, Clone)]
 pub enum Var {
     FreshVarType(usize),
@@ -78,18 +80,43 @@ impl Cons {
                 if t == (ret as &Term) {
                     return true;
                 }
+                if let Term::Cons(c) = t {
+                    if c.contain(t) {
+                        return true;
+                    }
+                }
                 for p in params {
                     if p == t {
+                        return true;
+                    }
+                    if let Term::Cons(c) = p {
+                        if c.contain(t) {
+                            return true;
+                        }
+                    }
+                }
+                false
+            }
+            Cons::PointerType(PointerType { ref of }) => {
+                if t == (of as &Term) {
+                    return true;
+                }
+                if let Term::Cons(c) = of as &Term {
+                    if c.contain(t) {
                         return true;
                     }
                 }
                 false
             }
-            Cons::PointerType(PointerType { ref of }) => t == (of as &Term),
             Cons::RecordType(RecordType { ref fields, .. }) => {
                 for f in fields.values() {
                     if f == t {
                         return true;
+                    }
+                    if let Term::Cons(c) = f {
+                        if c.contain(t) {
+                            return true;
+                        }
                     }
                 }
                 false
@@ -162,6 +189,7 @@ pub struct RecordType {
     /// so we use index to distinguish two RecordType
     index: usize,
 }
+
 impl RecordType {
     pub fn new() -> Self {
         static mut INDEX: usize = 0;
@@ -181,6 +209,9 @@ impl Hash for RecordType {
     }
 }
 
-// TODO
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
-pub struct RecursiveType;
+pub struct RecursiveType {
+    // freshvar
+    v: Var,
+    t: Box<Term>,
+}

@@ -13,7 +13,9 @@ impl UnionFindSolver {
     pub fn union(&mut self, k1: &Term, k2: &Term) {
         let v1: Term = self.find(k1).clone();
         let v2: Term = self.find(k2).clone();
-        if v1 == v2 { return; }
+        if v1 == v2 {
+            return;
+        }
         let v1_clone = v1.clone();
         let v2_clone = v2.clone();
         match (v1_clone, v2_clone) {
