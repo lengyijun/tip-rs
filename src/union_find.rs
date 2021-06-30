@@ -13,6 +13,7 @@ impl UnionFindSolver {
     pub fn union(&mut self, k1: &Term, k2: &Term) {
         let v1: Term = self.find(k1).clone();
         let v2: Term = self.find(k2).clone();
+        if v1 == v2 { return; }
         let v1_clone = v1.clone();
         let v2_clone = v2.clone();
         match (v1_clone, v2_clone) {
@@ -37,7 +38,7 @@ impl UnionFindSolver {
                     self.union(&p1.of, &p2.of);
                 }
                 (Cons::RecordType(r1), Cons::RecordType(r2)) => {
-                    assert!(r1.fields.len() == r2.fields.len());
+                    assert_eq!(r1.fields.len(), r2.fields.len());
                     for key in r1.fields.keys() {
                         self.union(&r1.fields[key], &r2.fields[key]);
                     }
