@@ -24,6 +24,7 @@ while_expr = {"while" ~ "(" ~ expression ~ ")" ~ statement }
 block={ "{" ~ statement* ~ "}" }
     statement=_{ output | error | assign | if_expr | while_expr | block }
 
+return_expr=_{ "return" ~ expression ~ ";"}
 function = {
   id
   ~ "("
@@ -32,9 +33,7 @@ function = {
   ~ "{"
   ~ vars
   ~ statement*
-  ~ "return"
-  ~ expression
-  ~ ";"
+  ~ return_expr
   ~ "}"
 }
 
