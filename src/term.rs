@@ -127,7 +127,7 @@ pub enum Mu {
     RecursiveType(RecursiveType),
 }
 
-#[derive(Debug, Hash, Eq, PartialEq, Clone)]
+#[derive(Hash, Eq, PartialEq, Clone)]
 pub struct FunctionType {
     /// initial with Vec<Term::FreshVarType>
     pub params: Vec<Term>,
@@ -135,9 +135,23 @@ pub struct FunctionType {
     pub ret: Box<Term>,
 }
 
-#[derive(Debug, Hash, Eq, PartialEq, Clone)]
+impl fmt::Debug for FunctionType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_fmt(format_args!("({:?})->{:?}", self.params, self.ret))?;
+        Ok(())
+    }
+}
+
+#[derive(Hash, Eq, PartialEq, Clone)]
 pub struct PointerType {
     pub of: Box<Term>,
+}
+
+impl fmt::Debug for PointerType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_fmt(format_args!("⭡{:?}", self.of))?;
+        Ok(())
+    }
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
