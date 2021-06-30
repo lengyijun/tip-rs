@@ -33,6 +33,8 @@ impl DFS for DeclarationAnalysis {
                 ref vars,
                 ..
             }) => {
+                // because the dfs function doesn't go to parameters and vars
+                // so we need to deal with them here
                 for parameter in parameters {
                     if let AstNodeKind::Id(ref name) = parameter.kind {
                         self.env.insert(name.clone(), parameter.clone());
@@ -52,7 +54,7 @@ impl DFS for DeclarationAnalysis {
             AstNodeKind::Program(ref functions) => {
                 for function in functions {
                     if let AstNodeKind::Function(Function { ref name, .. }) = function.kind {
-                        self.env.insert(name.clone(), node.clone());
+                        self.env.insert(name.clone(), function.clone());
                     } else {
                         unreachable!();
                     }

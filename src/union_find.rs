@@ -29,7 +29,7 @@ impl UnionFindSolver {
                 (Cons::IntType, Cons::IntType) => {}
                 (Cons::FunctionType(f1), Cons::FunctionType(f2)) => {
                     self.union(&f1.ret, &f2.ret);
-                    for (p1, p2) in f1.params.iter().zip(f1.params.iter()) {
+                    for (p1, p2) in f1.params.iter().zip(f2.params.iter()) {
                         self.union(p1, p2);
                     }
                 }
