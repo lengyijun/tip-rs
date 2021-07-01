@@ -203,15 +203,27 @@ impl DFS for TypeAnalysis {
             AstNodeKind::Expression(BinaryOp {
                 ref left,
                 ref right,
-                ..
+                ref op,
             }) => {
-                //  left=right=node=Int
-                self.union_find
-                    .union(&self.astNode2Term(left), &Term::Cons(Cons::IntType));
-                self.union_find
-                    .union(&self.astNode2Term(right), &Term::Cons(Cons::IntType));
-                self.union_find
-                    .union(&self.astNode2Term(node), &Term::Cons(Cons::IntType));
+                match op {
+                    Op::Equal => {
+                        // left=right
+                        // node=Int
+                        self.union_find
+                            .union(&self.astNode2Term(left), &self.astNode2Term(right));
+                        self.union_find
+                            .union(&self.astNode2Term(node), &Term::Cons(Cons::IntType));
+                    }
+                    _ => {
+                        // left=right=node=Int
+                        self.union_find
+                            .union(&self.astNode2Term(left), &Term::Cons(Cons::IntType));
+                        self.union_find
+                            .union(&self.astNode2Term(right), &Term::Cons(Cons::IntType));
+                        self.union_find
+                            .union(&self.astNode2Term(node), &Term::Cons(Cons::IntType));
+                    }
+                }
             }
             AstNodeKind::Ids(_) => {
                 unreachable!();
@@ -335,7 +347,8 @@ mod tests {
     fn test_single_type_analysis() -> std::io::Result<()> {
         // let path = "/home/lyj/TIP/examples/fib.tip";
         // let path = "/home/lyj/TIP/examples/mono2.tip";
-        let path = "/home/lyj/TIP/examples/foo.tip";
+        // let path = "/home/lyj/TIP/examples/foo.tip";
+        let path = "/home/lyj/TIP/examples/map.tip";
         let content = fs::read_to_string(&path)?;
         let program = parse(&content);
         let res = TypeAnalysis::work(&program);
