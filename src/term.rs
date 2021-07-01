@@ -28,20 +28,20 @@ impl fmt::Debug for Term {
     }
 }
 
-impl From<FunctionType> for Term{
-    fn from(f: FunctionType) -> Term{
+impl From<FunctionType> for Term {
+    fn from(f: FunctionType) -> Term {
         Term::Cons(Cons::FunctionType(f))
     }
 }
 
-impl From<PointerType> for Term{
-    fn from(p: PointerType) -> Term{
+impl From<PointerType> for Term {
+    fn from(p: PointerType) -> Term {
         Term::Cons(Cons::PointerType(p))
     }
 }
 
-impl From<RecordType> for Term{
-    fn from(r: RecordType) -> Term{
+impl From<RecordType> for Term {
+    fn from(r: RecordType) -> Term {
         Term::Cons(Cons::RecordType(r))
     }
 }
@@ -102,7 +102,6 @@ impl Term {
     }
 }
 
-// TODO 为了Mu,把FreshVarType提炼出来？
 #[derive(Hash, Eq, PartialEq, Clone)]
 pub enum Var {
     FreshVarType(usize),
@@ -260,7 +259,7 @@ impl fmt::Debug for PointerType {
     }
 }
 
-#[derive(Eq, PartialEq, Clone)]
+#[derive(Clone)]
 pub struct RecordType {
     /// initial with HashMap: x=>Term::FreshVarType
     pub fields: HashMap<String, Term>,
@@ -268,6 +267,13 @@ pub struct RecordType {
     /// so we use index to distinguish two RecordType
     index: usize,
 }
+impl PartialEq for RecordType {
+    fn eq(&self, other: &RecordType) -> bool {
+        self.fields == other.fields
+    }
+}
+
+impl Eq for RecordType {}
 
 impl RecordType {
     pub fn new() -> Self {

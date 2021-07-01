@@ -342,15 +342,81 @@ fn close(t: &Term, env: &HashMap<Term, Term>, fresh_vars: &mut HashMap<Term, Ter
 #[cfg(test)]
 mod tests {
     use crate::ast_parser::parse;
+    use crate::ast_parser::AstNodeKind::Vars;
     use crate::dfs::DFS;
+    use crate::term::Mu;
+    use crate::term::{FunctionType, PointerType, RecordType, RecursiveType};
+    use crate::type_analysis::AstNode;
+    use crate::type_analysis::AstNodeKind;
+    use crate::type_analysis::Cons;
+    use crate::type_analysis::Function;
+    use crate::type_analysis::Term;
     use crate::type_analysis::TypeAnalysis;
+    use crate::type_analysis::Var;
+    use std::alloc::System;
     use std::fs;
+
+    #[test]
+    fn test_foo_type() -> std::io::Result<()> {
+        let path = "/home/lyj/TIP/examples/foo.tip";
+        let content = fs::read_to_string(&path)?;
+        let program = parse(&content);
+        let res = TypeAnalysis::work(&program);
+        let foo = res
+            .iter()
+            .filter(|(k, v)| {
+                if let Term::Var(Var::VarType(AstNode {
+                    kind: AstNodeKind::Function(f),
+                    ..
+                })) = k
+                {
+                    if f.name == "foo" {
+                        true
+                    } else {
+                        false
+                    }
+                } else {
+                    false
+                }
+            })
+            .map(|(k, v)| v)
+            .next()
+            .unwrap();
+        if let Term::Cons(Cons::FunctionType(f)) = foo {
+            assert_eq!(&f.ret as &Term, &Term::Cons(Cons::IntType));
+            assert_eq!(
+                f.params[0],
+                Term::Cons(Cons::PointerType(PointerType {
+                    of: Box::new(Term::Cons(Cons::IntType))
+                }))
+            );
+            assert_eq!(
+                f.params[1],
+                Term::Mu(Mu::RecursiveType(RecursiveType {
+                    t: Box::new(Term::Cons(Cons::FunctionType(FunctionType {
+                        params: vec![
+                            Term::Cons(Cons::PointerType(PointerType {
+                                of: Box::new(Term::Cons(Cons::IntType))
+                            })),
+                            Term::Var(Var::PlaceHolder)
+                        ],
+                        ret: Box::new(Term::Cons(Cons::IntType))
+                    }))),
+                }))
+            );
+        } else {
+            unreachable!();
+        }
+        dbg!(foo);
+
+        dbg!(res);
+        Ok(())
+    }
 
     #[test]
     fn test_single_type_analysis() -> std::io::Result<()> {
         let path = "/home/lyj/TIP/examples/fib.tip";
         // let path = "/home/lyj/TIP/examples/mono2.tip";
-        // let path = "/home/lyj/TIP/examples/foo.tip";
         // let path = "/home/lyj/TIP/examples/map.tip";
         // let path = "/home/lyj/TIP/examples/record5.tip";
         // let path = "/home/lyj/TIP/examples/record4.tip";
