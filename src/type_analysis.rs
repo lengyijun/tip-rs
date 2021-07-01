@@ -242,6 +242,7 @@ impl DFS for TypeAnalysis {
     }
 }
 
+/// fresh_vars: Var => FreshVarType
 fn close_rec(
     t: &Term,
     env: &HashMap<Term, Term>,
@@ -261,9 +262,14 @@ fn close_rec(
                     if let Some(f) = fresh_vars.get(t) {
                         if let Term::Cons(ref c) = cterm {
                             if c.contain(f) {
-                                unimplemented!();
-                                // TODO
-                                // recursive type
+                                if let Term::Var(v) = f {
+                                    return Term::Mu(Mu::RecursiveType(RecursiveType {
+                                        v: v.clone(),
+                                        t: Box::new(cterm.substitute(t, f)),
+                                    }));
+                                } else {
+                                    unreachable!();
+                                }
                             }
                         }
                     }

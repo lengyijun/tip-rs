@@ -35,6 +35,52 @@ impl Term {
             Term::Var(Var::FreshVarType(INDEX))
         }
     }
+
+    /// from: Term::Var(Var::VarType)
+    /// to: Term::Var(Var::FreshVarType)
+    pub fn substitute(&self, from: &Term, to: &Term) -> Term {
+        match self {
+            Term::Var(_) => {
+                if self == from {
+                    to.clone()
+                } else {
+                    self.clone()
+                }
+            }
+            Term::Cons(c) => match c {
+                Cons::IntType => self.clone(),
+                Cons::FunctionType(FunctionType { params, ret }) => {
+                    Term::Cons(Cons::FunctionType(FunctionType {
+                        params: params.iter().map(|x| x.substitute(from, to)).collect(),
+                        ret: Box::new(ret.substitute(from, to)),
+                    }))
+                }
+                Cons::PointerType(PointerType { of }) => {
+                    Term::Cons(Cons::PointerType(PointerType {
+                        of: Box::new(of.substitute(from, to)),
+                    }))
+                }
+                Cons::RecordType(RecordType { fields, .. }) => {
+                    let mut r = RecordType::new();
+                    for (k, v) in fields {
+                        r.fields.insert(k.to_string(), v.substitute(from, to));
+                    }
+                    Term::Cons(Cons::RecordType(r))
+                }
+                Cons::AbsentFieldType => self.clone(),
+            },
+            Term::Mu(Mu::RecursiveType(RecursiveType { v, t })) => {
+                if self == from {
+                    to.clone()
+                } else {
+                    Term::Mu(Mu::RecursiveType(RecursiveType {
+                        v: v.clone(),
+                        t: Box::new(t.substitute(from, to)),
+                    }))
+                }
+            }
+        }
+    }
 }
 
 // TODO 为了Mu,把FreshVarType提炼出来？
@@ -69,7 +115,7 @@ pub enum Cons {
 }
 
 impl Cons {
-    /// t is Term::Var(..)
+    /// t: Term::Var(..)
     pub fn contain(&self, t: &Term) -> bool {
         match self {
             Cons::IntType => false,
@@ -211,7 +257,7 @@ impl Hash for RecordType {
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
 pub struct RecursiveType {
-    // freshvar
+    // Var::FreshVarType
     pub v: Var,
     pub t: Box<Term>,
 }
