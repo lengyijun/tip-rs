@@ -2,6 +2,7 @@ use crate::ast_parser::*;
 use crate::declaration_analysis::DeclarationAnalysis;
 use crate::dfs::DFS;
 use crate::field_collector::FieldCollector;
+use crate::term::Var::VarType;
 use crate::term::*;
 use crate::union_find::UnionFindSolver;
 use std::collections::{HashMap, HashSet};
@@ -275,9 +276,11 @@ fn close_rec(
                         if let Term::Cons(ref c) = cterm {
                             if c.contain(f) {
                                 if let Term::Var(v) = f {
+                                    let x = cterm
+                                        .substitute(t, &Term::Var(Var::PlaceHolder))
+                                        .substitute(f, &Term::Var(Var::PlaceHolder));
                                     return Term::Mu(Mu::RecursiveType(RecursiveType {
-                                        v: v.clone(),
-                                        t: Box::new(cterm.substitute(t, f)),
+                                        t: Box::new(x),
                                     }));
                                 } else {
                                     unreachable!();
