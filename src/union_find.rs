@@ -28,28 +28,31 @@ impl UnionFindSolver {
             (_, Term::Var(_)) => {
                 self.0.insert(v2, v1);
             }
-            (Term::Cons(c1), Term::Cons(c2)) => match (c1, c2) {
-                (Cons::IntType, Cons::IntType) => {}
-                (Cons::FunctionType(f1), Cons::FunctionType(f2)) => {
-                    self.union(&f1.ret, &f2.ret);
-                    for (p1, p2) in f1.params.iter().zip(f2.params.iter()) {
-                        self.union(p1, p2);
+            (Term::Cons(c1), Term::Cons(c2)) => {
+                self.0.insert(v1, v2);
+                match (c1, c2) {
+                    (Cons::IntType, Cons::IntType) => {}
+                    (Cons::FunctionType(f1), Cons::FunctionType(f2)) => {
+                        self.union(&f1.ret, &f2.ret);
+                        for (p1, p2) in f1.params.iter().zip(f2.params.iter()) {
+                            self.union(p1, p2);
+                        }
+                    }
+                    (Cons::PointerType(p1), Cons::PointerType(p2)) => {
+                        self.union(&p1.of, &p2.of);
+                    }
+                    (Cons::RecordType(r1), Cons::RecordType(r2)) => {
+                        assert_eq!(r1.fields.len(), r2.fields.len());
+                        for key in r1.fields.keys() {
+                            self.union(&r1.fields[key], &r2.fields[key]);
+                        }
+                    }
+                    (Cons::AbsentFieldType, Cons::AbsentFieldType) => {}
+                    (_, _) => {
+                        unreachable!();
                     }
                 }
-                (Cons::PointerType(p1), Cons::PointerType(p2)) => {
-                    self.union(&p1.of, &p2.of);
-                }
-                (Cons::RecordType(r1), Cons::RecordType(r2)) => {
-                    assert_eq!(r1.fields.len(), r2.fields.len());
-                    for key in r1.fields.keys() {
-                        self.union(&r1.fields[key], &r2.fields[key]);
-                    }
-                }
-                (Cons::AbsentFieldType, Cons::AbsentFieldType) => {}
-                (_, _) => {
-                    unreachable!();
-                }
-            },
+            }
             // cons->mu
             // mu->mu
             (_, _) => {
