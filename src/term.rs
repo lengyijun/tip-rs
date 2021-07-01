@@ -1,6 +1,7 @@
 use crate::ast_parser::AstNode;
 use std::collections::HashMap;
 use std::fmt;
+use std::fmt::Write;
 use std::hash::{Hash, Hasher};
 
 #[derive(Hash, Eq, PartialEq, Clone)]
@@ -210,7 +211,16 @@ pub struct FunctionType {
 
 impl fmt::Debug for FunctionType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_fmt(format_args!("({:?})->{:?}", self.params, self.ret))?;
+        if self.params.is_empty() {
+            f.write_fmt(format_args!("( )->{:?}", self.ret))?;
+        } else {
+            f.write_char('(')?;
+            for x in self.params.iter().take(self.params.len() - 1) {
+                f.write_fmt(format_args!("{:?},", x))?;
+            }
+            f.write_fmt(format_args!("{:?}", self.params.last().unwrap()))?;
+            f.write_fmt(format_args!(")->{:?}", self.ret))?;
+        }
         Ok(())
     }
 }
