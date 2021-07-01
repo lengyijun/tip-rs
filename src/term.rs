@@ -212,6 +212,6 @@ impl Hash for RecordType {
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
 pub struct RecursiveType {
     // freshvar
-    v: Var,
-    t: Box<Term>,
+    pub v: Var,
+    pub t: Box<Term>,
 }
