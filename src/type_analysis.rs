@@ -342,7 +342,6 @@ fn close(t: &Term, env: &HashMap<Term, Term>, fresh_vars: &mut HashMap<Term, Ter
 #[cfg(test)]
 mod tests {
     use crate::ast_parser::parse;
-    use crate::ast_parser::AstNodeKind::Vars;
     use crate::dfs::DFS;
     use crate::term::Mu;
     use crate::term::{FunctionType, PointerType, RecordType, RecursiveType};
@@ -354,15 +353,11 @@ mod tests {
     use crate::type_analysis::TypeAnalysis;
     use crate::type_analysis::Var;
     use std::alloc::System;
+    use std::collections::HashMap;
     use std::fs;
 
-    #[test]
-    fn test_foo_type() -> std::io::Result<()> {
-        let path = "/home/lyj/TIP/examples/foo.tip";
-        let content = fs::read_to_string(&path)?;
-        let program = parse(&content);
-        let res = TypeAnalysis::work(&program);
-        let foo = res
+    fn get_functiontype_by_name<'a>(mp: &'a HashMap<Term, Term>, name: &str) -> &'a FunctionType {
+        let t = mp
             .iter()
             .filter(|(k, v)| {
                 if let Term::Var(Var::VarType(AstNode {
@@ -370,7 +365,7 @@ mod tests {
                     ..
                 })) = k
                 {
-                    if f.name == "foo" {
+                    if f.name == name {
                         true
                     } else {
                         false
@@ -379,37 +374,49 @@ mod tests {
                     false
                 }
             })
-            .map(|(k, v)| v)
+            .map(|(_k, v)| v)
             .next()
             .unwrap();
-        if let Term::Cons(Cons::FunctionType(f)) = foo {
-            assert_eq!(&f.ret as &Term, &Term::Cons(Cons::IntType));
-            assert_eq!(
-                f.params[0],
-                Term::Cons(Cons::PointerType(PointerType {
-                    of: Box::new(Term::Cons(Cons::IntType))
-                }))
-            );
-            assert_eq!(
-                f.params[1],
-                Term::Mu(Mu::RecursiveType(RecursiveType {
-                    t: Box::new(Term::Cons(Cons::FunctionType(FunctionType {
-                        params: vec![
-                            Term::Cons(Cons::PointerType(PointerType {
-                                of: Box::new(Term::Cons(Cons::IntType))
-                            })),
-                            Term::Var(Var::PlaceHolder)
-                        ],
-                        ret: Box::new(Term::Cons(Cons::IntType))
-                    }))),
-                }))
-            );
+        if let Term::Cons(Cons::FunctionType(f)) = t {
+            f
         } else {
             unreachable!();
         }
-        dbg!(foo);
+    }
 
-        dbg!(res);
+    #[test]
+    fn test_foo_type() -> std::io::Result<()> {
+        let path = "/home/lyj/TIP/examples/foo.tip";
+        let content = fs::read_to_string(&path)?;
+        let program = parse(&content);
+        let res = TypeAnalysis::work(&program);
+        let foo = get_functiontype_by_name(&res, "foo");
+        assert_eq!(&foo.ret as &Term, &Term::Cons(Cons::IntType));
+        assert_eq!(
+            foo.params[0],
+            Term::Cons(Cons::PointerType(PointerType {
+                of: Box::new(Term::Cons(Cons::IntType))
+            }))
+        );
+        assert_eq!(
+            foo.params[1],
+            Term::Mu(Mu::RecursiveType(RecursiveType {
+                t: Box::new(Term::Cons(Cons::FunctionType(FunctionType {
+                    params: vec![
+                        Term::Cons(Cons::PointerType(PointerType {
+                            of: Box::new(Term::Cons(Cons::IntType))
+                        })),
+                        Term::Var(Var::PlaceHolder)
+                    ],
+                    ret: Box::new(Term::Cons(Cons::IntType))
+                }))),
+            }))
+        );
+
+        let main = get_functiontype_by_name(&res, "main");
+        assert!(main.params.is_empty());
+        assert_eq!(&main.ret as &Term, &Term::Cons(Cons::IntType));
+
         Ok(())
     }
 
