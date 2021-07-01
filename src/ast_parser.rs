@@ -185,8 +185,8 @@ pub struct AstNode {
     pub kind: AstNodeKind,
     /// start position
     /// note: different AstNode may share same start position
-    line: usize,
-    col: usize,
+    pub line: usize,
+    pub col: usize,
 }
 
 impl fmt::Debug for AstNode {
