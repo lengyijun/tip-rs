@@ -196,9 +196,9 @@ impl DFS for TypeAnalysis {
             }
             AstNodeKind::FieldAccess(FieldAccess { ref name, ref path }) => {
                 let mut rec = self.new_record();
-                rec.fields.insert(path.to_string(), self.astNode2Term(name));
+                rec.fields.insert(path.to_string(), self.astNode2Term(node));
                 self.union_find
-                    .union(&self.astNode2Term(node), &Term::Cons(Cons::RecordType(rec)));
+                    .union(&self.astNode2Term(name), &Term::Cons(Cons::RecordType(rec)));
             }
             AstNodeKind::Expression(BinaryOp {
                 ref left,
@@ -348,7 +348,9 @@ mod tests {
         // let path = "/home/lyj/TIP/examples/fib.tip";
         // let path = "/home/lyj/TIP/examples/mono2.tip";
         // let path = "/home/lyj/TIP/examples/foo.tip";
-        let path = "/home/lyj/TIP/examples/map.tip";
+        // let path = "/home/lyj/TIP/examples/map.tip";
+        // let path = "/home/lyj/TIP/examples/record5.tip";
+        let path = "/home/lyj/TIP/examples/record4.tip";
         let content = fs::read_to_string(&path)?;
         let program = parse(&content);
         let res = TypeAnalysis::work(&program);
