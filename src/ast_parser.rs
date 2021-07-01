@@ -1,6 +1,8 @@
 use pest::iterators::{Pair, Pairs};
 use pest::prec_climber::*;
 use pest::Parser;
+use std::fmt;
+use std::fmt::Write;
 
 lazy_static! {
     static ref PREC_CLIMBER: PrecClimber<Rule> = {
@@ -91,16 +93,32 @@ pub struct Block {
     pub exprs: Vec<AstNode>,
 }
 
-#[derive(Debug, Hash, Eq, PartialEq, Clone)]
+#[derive(Hash, Eq, PartialEq, Clone)]
 pub struct Function {
     pub name: String,
     /// Vec<AstNode::Id>
-    pub parameters: Vec<AstNode>,
+    pub params: Vec<AstNode>,
     /// Vec<AstNode::Id>
     pub vars: Vec<AstNode>,
     pub statements: Vec<AstNode>,
     /// a expression
     pub ret: Box<AstNode>,
+}
+
+impl fmt::Debug for Function {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.params.is_empty() {
+            f.write_fmt(format_args!("{}( )->{{...}}", self.name))?;
+        } else {
+            f.write_fmt(format_args!("{}(", self.name))?;
+            for x in self.params.iter().take(self.params.len() - 1) {
+                f.write_fmt(format_args!("{:?},", x))?;
+            }
+            f.write_fmt(format_args!("{:?}", self.params.last().unwrap()))?;
+            f.write_fmt(format_args!(")->{{...}}"))?;
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
@@ -162,13 +180,20 @@ pub struct BinaryOp {
     pub right: Box<AstNode>,
 }
 
-#[derive(Debug, Hash, Eq, PartialEq, Clone)]
+#[derive(Hash, Eq, PartialEq, Clone)]
 pub struct AstNode {
     pub kind: AstNodeKind,
     /// start position
     /// note: different AstNode may share same start position
     line: usize,
     col: usize,
+}
+
+impl fmt::Debug for AstNode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_fmt(format_args!("{:?}[{}:{}]", self.kind, self.line, self.col))?;
+        Ok(())
+    }
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
@@ -412,8 +437,8 @@ fn build_ast_from_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
             let mut pair = pair.into_inner();
             let name = pair.next().unwrap().as_str().to_string();
             let ids = Box::new(build_ast_from_expr(pair.next().unwrap()));
-            let parameters = if let AstNodeKind::Ids(parameters) = ids.kind {
-                parameters
+            let params = if let AstNodeKind::Ids(params) = ids.kind {
+                params
             } else {
                 unreachable!();
             };
@@ -430,7 +455,7 @@ fn build_ast_from_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
                 col,
                 kind: AstNodeKind::Function(Function {
                     name,
-                    parameters,
+                    params,
                     vars,
                     statements,
                     ret,
@@ -514,6 +539,7 @@ fn build_ast_from_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
         _ => unreachable!(),
     }
 }
+
 fn build_field_access(pair: Pair<Rule>) -> AstNode {
     let (line, col) = pair.as_span().start_pos().line_col();
     let mut pair = pair.into_inner();

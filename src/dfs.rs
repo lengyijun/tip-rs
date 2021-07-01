@@ -62,7 +62,7 @@ pub trait DFS {
                 }
             }
             AstNodeKind::Function(Function {
-                ref parameters,
+                ref params,
                 ref vars,
                 ref statements,
                 ref ret,

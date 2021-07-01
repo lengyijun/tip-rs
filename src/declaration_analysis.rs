@@ -29,15 +29,15 @@ impl DFS for DeclarationAnalysis {
                 return false;
             }
             AstNodeKind::Function(Function {
-                ref parameters,
+                ref params,
                 ref vars,
                 ..
             }) => {
                 // because the dfs function doesn't go to parameters and vars
                 // so we need to deal with them here
-                for parameter in parameters {
-                    if let AstNodeKind::Id(ref name) = parameter.kind {
-                        self.env.insert(name.clone(), parameter.clone());
+                for param in params {
+                    if let AstNodeKind::Id(ref name) = param.kind {
+                        self.env.insert(name.clone(), param.clone());
                     } else {
                         unreachable!();
                     }

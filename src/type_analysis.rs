@@ -107,19 +107,19 @@ impl DFS for TypeAnalysis {
             }
             AstNodeKind::Block(_) => {}
             AstNodeKind::Function(Function {
-                ref parameters,
+                ref params,
                 ref ret,
                 name,
                 ..
             }) => {
                 let ft = if name == "main" {
                     FunctionType {
-                        params: parameters.iter().map(|x| self.astNode2Term(x)).collect(),
+                        params: params.iter().map(|x| self.astNode2Term(x)).collect(),
                         ret: Box::new(Term::Cons(Cons::IntType)),
                     }
                 } else {
                     FunctionType {
-                        params: parameters.iter().map(|x| self.astNode2Term(x)).collect(),
+                        params: params.iter().map(|x| self.astNode2Term(x)).collect(),
                         ret: Box::new(self.astNode2Term(ret)),
                     }
                 };
@@ -345,12 +345,12 @@ mod tests {
 
     #[test]
     fn test_single_type_analysis() -> std::io::Result<()> {
-        // let path = "/home/lyj/TIP/examples/fib.tip";
+        let path = "/home/lyj/TIP/examples/fib.tip";
         // let path = "/home/lyj/TIP/examples/mono2.tip";
         // let path = "/home/lyj/TIP/examples/foo.tip";
         // let path = "/home/lyj/TIP/examples/map.tip";
         // let path = "/home/lyj/TIP/examples/record5.tip";
-        let path = "/home/lyj/TIP/examples/record4.tip";
+        // let path = "/home/lyj/TIP/examples/record4.tip";
         let content = fs::read_to_string(&path)?;
         let program = parse(&content);
         let res = TypeAnalysis::work(&program);

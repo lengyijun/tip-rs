@@ -237,7 +237,7 @@ impl fmt::Debug for PointerType {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Eq, PartialEq, Clone)]
 pub struct RecordType {
     /// initial with HashMap: x=>Term::FreshVarType
     pub fields: HashMap<String, Term>,
@@ -262,6 +262,13 @@ impl RecordType {
 impl Hash for RecordType {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.index.hash(state);
+    }
+}
+
+impl fmt::Debug for RecordType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_fmt(format_args!("{:?}", self.fields))?;
+        Ok(())
     }
 }
 
