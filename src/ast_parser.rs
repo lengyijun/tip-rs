@@ -572,4 +572,18 @@ mod tests {
         }
         Ok(())
     }
+
+    #[test]
+    fn test_deref() -> std::io::Result<()> {
+        // expect (*n).p
+        // wrong  *(n.p)
+        let content = "*n.p";
+        let pairs =
+            IdentParser::parse(Rule::expression, content).unwrap_or_else(|e| panic!("{}", e));
+        for pair in pairs {
+            let a = build_ast_from_expr(pair);
+            dbg!(a);
+        }
+        Ok(())
+    }
 }
