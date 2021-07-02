@@ -328,8 +328,11 @@ fn close_rec(
                 Term::Cons(Cons::RecordType(res))
             }
         },
-        Term::Mu(_) => {
-            unimplemented!();
+        Term::Mu(Mu::RecursiveType(RecursiveType{v,t})) => {
+            return Term::Mu(Mu::RecursiveType(RecursiveType {
+                v: v.clone(),
+                t: Box::new(close_rec(t,env,fresh_vars,visited.clone())),
+            }));
         }
     }
 }
