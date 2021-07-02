@@ -1,6 +1,6 @@
 use crate::ast_parser::*;
 
-pub trait DFS {
+pub trait Dfs {
     type ResultType;
 
     // visit children

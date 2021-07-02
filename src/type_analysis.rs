@@ -1,6 +1,6 @@
 use crate::ast_parser::*;
 use crate::declaration_analysis::DeclarationAnalysis;
-use crate::dfs::DFS;
+use crate::dfs::Dfs;
 use crate::field_collector::FieldCollector;
 use crate::term::Var::VarType;
 use crate::term::*;
@@ -31,7 +31,7 @@ impl TypeAnalysis {
     }
 }
 
-impl DFS for TypeAnalysis {
+impl Dfs for TypeAnalysis {
     type ResultType = HashMap<Term, Term>;
 
     fn new(node: &AstNode) -> Self {
@@ -52,7 +52,7 @@ impl DFS for TypeAnalysis {
             AstNodeKind::DerefWrite(_) => {}
             AstNodeKind::Output(Output { expr }) => {
                 self.union_find
-                    .union(&self.astNode2Term(&expr), &Term::Cons(Cons::IntType));
+                    .union(&self.astNode2Term(expr), &Term::Cons(Cons::IntType));
             }
             AstNodeKind::Error(_) => {}
             AstNodeKind::Assign(Assign {
@@ -69,7 +69,7 @@ impl DFS for TypeAnalysis {
                         let mut rec = self.new_record();
                         rec.fields.insert(field.clone(), self.astNode2Term(right));
                         self.union_find
-                            .union(&self.astNode2Term(&id), &Term::Cons(Cons::RecordType(rec)));
+                            .union(&self.astNode2Term(id), &Term::Cons(Cons::RecordType(rec)));
                     }
                     AstNodeKind::IndirectFieldWrite(IndirectFieldWrite {
                         ref expr,
@@ -243,10 +243,10 @@ impl DFS for TypeAnalysis {
         for (k, v) in &env {
             if let Term::Var(Var::VarType(n)) = k {
                 if let AstNodeKind::Id(_) = n.kind {
-                    let x = close(&v, &env, &mut fresh_vars);
+                    let x = close(v, &env, &mut fresh_vars);
                     res.insert(k.clone(), x);
                 } else if let AstNodeKind::Function(_) = n.kind {
-                    let x = close(&v, &env, &mut fresh_vars);
+                    let x = close(v, &env, &mut fresh_vars);
                     res.insert(k.clone(), x);
                 }
             }
@@ -308,12 +308,12 @@ fn close_rec(
                 }
                 Term::Cons(Cons::FunctionType(FunctionType {
                     params,
-                    ret: Box::new(close_rec(&ft.ret, env, fresh_vars, visited.clone())),
+                    ret: Box::new(close_rec(&ft.ret, env, fresh_vars, visited)),
                 }))
             }
             Cons::PointerType(PointerType { ref of }) => {
                 let pt_clone = PointerType {
-                    of: Box::new(close_rec(of, env, fresh_vars, visited.clone())),
+                    of: Box::new(close_rec(of, env, fresh_vars, visited)),
                 };
                 Term::Cons(Cons::PointerType(pt_clone))
             }
@@ -328,11 +328,11 @@ fn close_rec(
                 Term::Cons(Cons::RecordType(res))
             }
         },
-        Term::Mu(Mu::RecursiveType(RecursiveType{v,t})) => {
-            return Term::Mu(Mu::RecursiveType(RecursiveType {
+        Term::Mu(Mu::RecursiveType(RecursiveType { v, t })) => {
+            Term::Mu(Mu::RecursiveType(RecursiveType {
                 v: v.clone(),
-                t: Box::new(close_rec(t,env,fresh_vars,visited.clone())),
-            }));
+                t: Box::new(close_rec(t, env, fresh_vars, visited)),
+            }))
         }
     }
 }
@@ -344,7 +344,7 @@ fn close(t: &Term, env: &HashMap<Term, Term>, fresh_vars: &mut HashMap<Term, Ter
 #[cfg(test)]
 mod tests {
     use crate::ast_parser::parse;
-    use crate::dfs::DFS;
+    use crate::dfs::Dfs;
     use crate::term::Mu;
     use crate::term::{FunctionType, PointerType, RecordType, RecursiveType};
     use crate::type_analysis::AstNode;

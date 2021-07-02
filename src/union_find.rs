@@ -82,7 +82,7 @@ impl UnionFindSolver {
 
     pub fn solution(mut self) -> HashMap<Term, Term> {
         let mut h = HashMap::new();
-        let keys: Vec<Term> = self.0.keys().map(|x| x.clone()).collect();
+        let keys: Vec<Term> = self.0.keys().cloned().collect();
         for k in keys {
             let v = self.find(&k).clone();
             h.insert(k, v);

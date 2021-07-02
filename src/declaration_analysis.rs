@@ -1,5 +1,5 @@
 use crate::ast_parser::*;
-use crate::dfs::DFS;
+use crate::dfs::Dfs;
 use std::collections::HashMap;
 
 pub struct DeclarationAnalysis {
@@ -9,7 +9,7 @@ pub struct DeclarationAnalysis {
     decl: HashMap<AstNode, AstNode>,
 }
 
-impl DFS for DeclarationAnalysis {
+impl Dfs for DeclarationAnalysis {
     type ResultType = HashMap<AstNode, AstNode>;
 
     fn new(_: &AstNode) -> Self {
@@ -26,7 +26,7 @@ impl DFS for DeclarationAnalysis {
             AstNodeKind::Id(ref name) => {
                 let root = self.env.get(name).unwrap().clone();
                 self.decl.insert(node.clone(), root);
-                return false;
+                false
             }
             AstNodeKind::Function(Function {
                 ref params,
@@ -49,7 +49,7 @@ impl DFS for DeclarationAnalysis {
                         unreachable!();
                     }
                 }
-                return true;
+                true
             }
             AstNodeKind::Program(ref functions) => {
                 for function in functions {
@@ -71,11 +71,9 @@ impl DFS for DeclarationAnalysis {
                     }
                 }
                 // stop dfs
-                return false;
+                false
             }
-            _ => {
-                return true;
-            }
+            _ => true,
         }
     }
 
@@ -88,7 +86,7 @@ impl DFS for DeclarationAnalysis {
 mod tests {
     use crate::ast_parser::parse;
     use crate::declaration_analysis::DeclarationAnalysis;
-    use crate::dfs::DFS;
+    use crate::dfs::Dfs;
     use std::collections::HashMap;
     use std::fs;
 

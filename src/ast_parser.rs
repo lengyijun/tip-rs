@@ -26,8 +26,7 @@ pub fn parse(input: &str) -> AstNode {
         .unwrap_or_else(|e| panic!("{}", e))
         .next()
         .unwrap();
-    let a = build_ast_from_expr(pair);
-    a
+    build_ast_from_expr(pair)
 }
 
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]

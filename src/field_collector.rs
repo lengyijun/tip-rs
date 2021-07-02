@@ -1,12 +1,12 @@
 use crate::ast_parser::*;
-use crate::dfs::DFS;
+use crate::dfs::Dfs;
 use std::collections::HashSet;
 
 pub struct FieldCollector {
     fields: HashSet<String>,
 }
 
-impl DFS for FieldCollector {
+impl Dfs for FieldCollector {
     type ResultType = Vec<String>;
 
     fn new(_: &AstNode) -> Self {
@@ -16,14 +16,12 @@ impl DFS for FieldCollector {
     }
 
     fn visit(&mut self, node: &AstNode) -> bool {
-        match &node.kind {
-            AstNodeKind::Record(fs) => {
-                for f in fs {
-                    self.fields.insert(f.name.clone());
-                }
+        if let AstNodeKind::Record(fs) = &node.kind {
+            for f in fs {
+                self.fields.insert(f.name.clone());
             }
-            _ => {}
         }
+
         true
     }
 
