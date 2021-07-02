@@ -56,7 +56,7 @@ impl Term {
     }
 
     /// from: Term::Var
-    /// to: Term::Var(Var::Placeholder)
+    /// to: Term::Var(Var::FreshVarType)
     /// used in making a RecursiveType
     pub fn substitute(&self, from: &Term, to: &Term) -> Term {
         match self {
@@ -89,11 +89,12 @@ impl Term {
                 }
                 Cons::AbsentFieldType => self.clone(),
             },
-            Term::Mu(Mu::RecursiveType(RecursiveType { t })) => {
+            Term::Mu(Mu::RecursiveType(RecursiveType { v, t })) => {
                 if self == from {
                     to.clone()
                 } else {
                     Term::Mu(Mu::RecursiveType(RecursiveType {
+                        v: v.clone(),
                         t: Box::new(t.substitute(from, to)),
                     }))
                 }
@@ -106,8 +107,6 @@ impl Term {
 pub enum Var {
     FreshVarType(usize),
     VarType(AstNode),
-    // used only in RecursiveType
-    PlaceHolder,
 }
 
 impl fmt::Debug for Var {
@@ -118,9 +117,6 @@ impl fmt::Debug for Var {
             }
             Var::VarType(node) => {
                 f.write_fmt(format_args!("{:?}", node))?;
-            }
-            Var::PlaceHolder => {
-                f.write_fmt(format_args!("Placeholder"))?;
             }
         }
         Ok(())
@@ -301,13 +297,8 @@ impl fmt::Debug for RecordType {
     }
 }
 
-/// RecursiveType will use a Placeholder
-/// `x => ⭡(Placeholder)` means x = ⭡x = ⭡⭡x = ....
-/// `x => (Placeholder,IntType)-> IntType` means
-/// x = ((..,IntType)->IntType,IntType) -> IntType
-///
-/// This design will help to write unit test
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
 pub struct RecursiveType {
+    pub v: Box<Term>,
     pub t: Box<Term>,
 }

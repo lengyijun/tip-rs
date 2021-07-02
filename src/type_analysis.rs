@@ -276,10 +276,9 @@ fn close_rec(
                         if let Term::Cons(ref c) = cterm {
                             if c.contain(f) {
                                 if let Term::Var(v) = f {
-                                    let x = cterm
-                                        .substitute(t, &Term::Var(Var::PlaceHolder))
-                                        .substitute(f, &Term::Var(Var::PlaceHolder));
+                                    let x = cterm.substitute(t, f);
                                     return Term::Mu(Mu::RecursiveType(RecursiveType {
+                                        v: Box::new(f.clone()),
                                         t: Box::new(x),
                                     }));
                                 } else {
@@ -398,20 +397,22 @@ mod tests {
                 of: Box::new(Term::Cons(Cons::IntType))
             }))
         );
-        assert_eq!(
-            foo.params[1],
-            Term::Mu(Mu::RecursiveType(RecursiveType {
-                t: Box::new(Term::Cons(Cons::FunctionType(FunctionType {
+        if let Term::Mu(Mu::RecursiveType(RecursiveType { ref v, ref t })) = foo.params[1] {
+            assert_eq!(
+                t,
+                &Box::new(Term::Cons(Cons::FunctionType(FunctionType {
                     params: vec![
                         Term::Cons(Cons::PointerType(PointerType {
                             of: Box::new(Term::Cons(Cons::IntType))
                         })),
-                        Term::Var(Var::PlaceHolder)
+                        (v as &Term).clone()
                     ],
                     ret: Box::new(Term::Cons(Cons::IntType))
                 }))),
-            }))
-        );
+            );
+        } else {
+            unreachable!();
+        }
 
         let main = get_functiontype_by_name(&res, "main");
         assert!(main.params.is_empty());
