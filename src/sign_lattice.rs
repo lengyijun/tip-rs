@@ -12,6 +12,10 @@ enum Sign {
     Bot,
 }
 
+trait PartialOrd {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering>;
+}
+
 impl PartialOrd for Sign {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         if self == other {
@@ -27,6 +31,23 @@ impl PartialOrd for Sign {
     }
 }
 
+impl PartialOrd for (Sign, Sign) {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        if self == other {
+            return Some(Ordering::Equal);
+        }
+        match (self.0.partial_cmp(&other.0), self.1.partial_cmp(&other.1)) {
+            (None, _) => None,
+            (_, None) => None,
+            (Some(Ordering::Greater), Some(Ordering::Less)) => None,
+            (Some(Ordering::Less), Some(Ordering::Greater)) => None,
+            (t, Some(Ordering::Equal)) => t,
+            (Some(Ordering::Equal), t) => t,
+            _ => unreachable!(),
+        }
+    }
+}
+
 impl Sign {
     fn plus(self, other: Self) -> Self {
         use Sign::*;
@@ -36,7 +57,7 @@ impl Sign {
         let mp: &HashMap<(Sign, Sign), Sign> = cell.get_or_init(|| {
             let mut mp = HashMap::new();
             mp.insert((Bot, Bot), Bot);
-            mp.insert((Bot, Zero),Bot);
+            mp.insert((Bot, Zero), Bot);
             mp.insert((Bot, Neg), Bot);
             mp.insert((Bot, Pos), Bot);
             mp.insert((Bot, Top), Bot);
@@ -70,33 +91,45 @@ impl Sign {
     }
 }
 
-fn check_monotone(f:&dyn Fn(Sign,Sign)->Sign) -> bool {
+fn check_monotone(f: &dyn Fn(Sign, Sign) -> Sign) -> bool {
     todo!();
     true
 }
-
 
 #[cfg(test)]
 mod tests {
     use crate::ast_parser::parse;
     use crate::declaration_analysis::DeclarationAnalysis;
     use crate::dfs::Dfs;
-    use std::collections::HashMap;
-    use std::fs;
     use crate::sign_lattice::check_monotone;
+    use crate::sign_lattice::PartialOrd;
     use crate::sign_lattice::Sign;
     use std::cmp::Ordering;
+    use std::collections::HashMap;
+    use std::fs;
 
     #[test]
     fn test_ord() {
-        assert_eq!((Sign::Bot,Sign::Top).partial_cmp(&(Sign::Bot,Sign::Top)),Some(Ordering::Equal));
-        assert_eq!((Sign::Bot,Sign::Pos).partial_cmp(&(Sign::Bot,Sign::Top)),Some(Ordering::Less));
-        assert_eq!((Sign::Bot,Sign::Top).partial_cmp(&(Sign::Top,Sign::Bot)),None);
-        assert_eq!((Sign::Top,Sign::Bot).partial_cmp(&(Sign::Bot,Sign::Top)),None);
+        assert_eq!(
+            (Sign::Bot, Sign::Top).partial_cmp(&(Sign::Bot, Sign::Top)),
+            Some(Ordering::Equal)
+        );
+        assert_eq!(
+            (Sign::Bot, Sign::Pos).partial_cmp(&(Sign::Bot, Sign::Top)),
+            Some(Ordering::Less)
+        );
+        assert_eq!(
+            (Sign::Bot, Sign::Top).partial_cmp(&(Sign::Top, Sign::Bot)),
+            None
+        );
+        assert_eq!(
+            (Sign::Top, Sign::Bot).partial_cmp(&(Sign::Bot, Sign::Top)),
+            None
+        );
     }
 
     #[test]
     fn test_sign_lattice() {
-       assert!(check_monotone(&Sign::plus));
+        assert!(check_monotone(&Sign::plus));
     }
 }
