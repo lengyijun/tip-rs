@@ -1,5 +1,5 @@
 use std::cmp::Ordering;
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::iter::FromIterator;
 use std::lazy::OnceCell;
 
@@ -134,44 +134,74 @@ impl Sign {
     }
 }
 
+// O(n^3)
 fn check_monotone(f: &dyn Fn(Sign, Sign) -> Sign) -> bool {
     use Sign::*;
-    let v = vec![
-        (Bot, Bot),
-        (Bot, Zero),
-        (Bot, Neg),
-        (Bot, Pos),
-        (Bot, Top),
-        (Zero, Bot),
-        (Zero, Zero),
-        (Zero, Neg),
-        (Zero, Pos),
-        (Zero, Top),
-        (Neg, Bot),
-        (Neg, Zero),
-        (Neg, Neg),
-        (Neg, Pos),
-        (Neg, Top),
-        (Pos, Bot),
-        (Pos, Zero),
-        (Pos, Neg),
-        (Pos, Pos),
-        (Pos, Top),
-        (Top, Bot),
-        (Top, Zero),
-        (Top, Neg),
-        (Top, Pos),
-        (Top, Top),
-    ];
-    for a in &v {
-        for b in &v {
-            if a.partial_cmp(b) == Some(Ordering::Greater) {
-                let t = f(a.0, a.1).partial_cmp(&f(b.0, b.1));
-                if t == Some(Ordering::Less) {
+    let mut vq = VecDeque::new();
+    vq.push_front((Bot, Bot));
+    while let Some(n) = vq.pop_front() {
+        match n.0 {
+            Top => {}
+            Pos | Zero | Neg => {
+                if f(n.0, n.1).partial_cmp(&f(Top, n.1)) == Some(Ordering::Greater) {
                     return false;
                 }
+                if !vq.contains(&(Top, n.1)) {
+                    vq.push_back((Top, n.1));
+                }
             }
-        }
+            Bot => {
+                if f(n.0, n.1).partial_cmp(&f(Pos, n.1)) == Some(Ordering::Greater) {
+                    return false;
+                }
+                if !vq.contains(&(Pos, n.1)) {
+                    vq.push_back((Pos, n.1));
+                }
+                if f(n.0, n.1).partial_cmp(&f(Zero, n.1)) == Some(Ordering::Greater) {
+                    return false;
+                }
+                if !vq.contains(&(Zero, n.1)) {
+                    vq.push_back((Zero, n.1));
+                }
+                if f(n.0, n.1).partial_cmp(&f(Neg, n.1)) == Some(Ordering::Greater) {
+                    return false;
+                }
+                if !vq.contains(&(Neg, n.1)) {
+                    vq.push_back((Neg, n.1));
+                }
+            }
+        };
+        match n.1 {
+            Top => {}
+            Pos | Zero | Neg => {
+                if f(n.0, n.1).partial_cmp(&f(n.0, Top)) == Some(Ordering::Greater) {
+                    return false;
+                }
+                if !vq.contains(&(n.0, Top)) {
+                    vq.push_back((n.0, Top));
+                }
+            }
+            Bot => {
+                if f(n.0, n.1).partial_cmp(&f(n.0, Pos)) == Some(Ordering::Greater) {
+                    return false;
+                }
+                if !vq.contains(&(n.0, Pos)) {
+                    vq.push_back((n.0, Pos));
+                }
+                if f(n.0, n.1).partial_cmp(&f(n.0, Zero)) == Some(Ordering::Greater) {
+                    return false;
+                }
+                if !vq.contains(&(n.0, Zero)) {
+                    vq.push_back((n.0, Zero));
+                }
+                if f(n.0, n.1).partial_cmp(&f(n.0, Neg)) == Some(Ordering::Greater) {
+                    return false;
+                }
+                if !vq.contains(&(n.0, Neg)) {
+                    vq.push_back((n.0, Neg));
+                }
+            }
+        };
     }
     true
 }
