@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::iter::FromIterator;
 use std::lazy::OnceCell;
 
-#[derive(Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
 enum Sign {
     Top,
     Pos,
@@ -41,6 +41,8 @@ impl PartialOrd for (Sign, Sign) {
             (_, None) => None,
             (Some(Ordering::Greater), Some(Ordering::Less)) => None,
             (Some(Ordering::Less), Some(Ordering::Greater)) => None,
+            (Some(Ordering::Greater), Some(Ordering::Greater)) => Some(Ordering::Greater),
+            (Some(Ordering::Less), Some(Ordering::Less)) => Some(Ordering::Less),
             (t, Some(Ordering::Equal)) => t,
             (Some(Ordering::Equal), t) => t,
             _ => unreachable!(),
@@ -92,7 +94,44 @@ impl Sign {
 }
 
 fn check_monotone(f: &dyn Fn(Sign, Sign) -> Sign) -> bool {
-    todo!();
+    use Sign::*;
+    let v = vec![
+        (Bot, Bot),
+        (Bot, Zero),
+        (Bot, Neg),
+        (Bot, Pos),
+        (Bot, Top),
+        (Zero, Bot),
+        (Zero, Zero),
+        (Zero, Neg),
+        (Zero, Pos),
+        (Zero, Top),
+        (Neg, Bot),
+        (Neg, Zero),
+        (Neg, Neg),
+        (Neg, Pos),
+        (Neg, Top),
+        (Pos, Bot),
+        (Pos, Zero),
+        (Pos, Neg),
+        (Pos, Pos),
+        (Pos, Top),
+        (Top, Bot),
+        (Top, Zero),
+        (Top, Neg),
+        (Top, Pos),
+        (Top, Top),
+    ];
+    for a in &v {
+        for b in &v {
+            if a.partial_cmp(b) == Some(Ordering::Greater) {
+                let t = f(a.0, a.1).partial_cmp(&f(b.0, b.1));
+                if t == Some(Ordering::Less) {
+                    return false;
+                }
+            }
+        }
+    }
     true
 }
 
