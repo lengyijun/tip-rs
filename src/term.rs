@@ -133,6 +133,7 @@ pub enum Cons {
     AbsentFieldType,
 }
 
+// TODO: we can rewrite this with Iterator
 impl Cons {
     /// t: Term::Var(..)
     pub fn contain(&self, t: &Term) -> bool {

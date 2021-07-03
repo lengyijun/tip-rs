@@ -140,65 +140,38 @@ fn check_monotone(f: &dyn Fn(Sign, Sign) -> Sign) -> bool {
     let mut vq = VecDeque::new();
     vq.push_front((Bot, Bot));
     while let Some(n) = vq.pop_front() {
+        let mut cl = |x: (Sign, Sign)| -> bool {
+            if f(n.0, n.1).partial_cmp(&f(x.0, x.1)) == Some(Ordering::Greater) {
+                return false;
+            }
+            if !vq.contains(&x) {
+                vq.push_back(x);
+            }
+            true
+        };
         match n.0 {
             Top => {}
             Pos | Zero | Neg => {
-                if f(n.0, n.1).partial_cmp(&f(Top, n.1)) == Some(Ordering::Greater) {
+                if !cl((Top, n.1)) {
                     return false;
-                }
-                if !vq.contains(&(Top, n.1)) {
-                    vq.push_back((Top, n.1));
                 }
             }
             Bot => {
-                if f(n.0, n.1).partial_cmp(&f(Pos, n.1)) == Some(Ordering::Greater) {
+                if !cl((Pos, n.1)) && !cl((Zero, n.1)) && !cl((Neg, n.1)) {
                     return false;
-                }
-                if !vq.contains(&(Pos, n.1)) {
-                    vq.push_back((Pos, n.1));
-                }
-                if f(n.0, n.1).partial_cmp(&f(Zero, n.1)) == Some(Ordering::Greater) {
-                    return false;
-                }
-                if !vq.contains(&(Zero, n.1)) {
-                    vq.push_back((Zero, n.1));
-                }
-                if f(n.0, n.1).partial_cmp(&f(Neg, n.1)) == Some(Ordering::Greater) {
-                    return false;
-                }
-                if !vq.contains(&(Neg, n.1)) {
-                    vq.push_back((Neg, n.1));
                 }
             }
         };
         match n.1 {
             Top => {}
             Pos | Zero | Neg => {
-                if f(n.0, n.1).partial_cmp(&f(n.0, Top)) == Some(Ordering::Greater) {
+                if !cl((n.0, Top)) {
                     return false;
-                }
-                if !vq.contains(&(n.0, Top)) {
-                    vq.push_back((n.0, Top));
                 }
             }
             Bot => {
-                if f(n.0, n.1).partial_cmp(&f(n.0, Pos)) == Some(Ordering::Greater) {
+                if !cl((n.0, Pos)) && !cl((n.0, Zero)) && !cl((n.0, Neg)) {
                     return false;
-                }
-                if !vq.contains(&(n.0, Pos)) {
-                    vq.push_back((n.0, Pos));
-                }
-                if f(n.0, n.1).partial_cmp(&f(n.0, Zero)) == Some(Ordering::Greater) {
-                    return false;
-                }
-                if !vq.contains(&(n.0, Zero)) {
-                    vq.push_back((n.0, Zero));
-                }
-                if f(n.0, n.1).partial_cmp(&f(n.0, Neg)) == Some(Ordering::Greater) {
-                    return false;
-                }
-                if !vq.contains(&(n.0, Neg)) {
-                    vq.push_back((n.0, Neg));
                 }
             }
         };
@@ -219,7 +192,7 @@ mod tests {
     use std::fs;
 
     #[test]
-    fn test_ord() {
+    fn test_sign_ord() {
         assert_eq!(
             (Sign::Bot, Sign::Top).partial_cmp(&(Sign::Bot, Sign::Top)),
             Some(Ordering::Equal)
