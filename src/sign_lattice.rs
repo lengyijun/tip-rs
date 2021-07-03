@@ -91,6 +91,47 @@ impl Sign {
         });
         mp[&(self, other)]
     }
+
+    fn minus(self, other: Self) -> Self {
+        use Sign::*;
+        let cell = OnceCell::new();
+        assert!(cell.get().is_none());
+
+        let mp: &HashMap<(Sign, Sign), Sign> = cell.get_or_init(|| {
+            let mut mp = HashMap::new();
+            mp.insert((Bot, Bot), Bot);
+            mp.insert((Bot, Zero), Bot);
+            mp.insert((Bot, Neg), Bot);
+            mp.insert((Bot, Pos), Bot);
+            mp.insert((Bot, Top), Bot);
+
+            mp.insert((Zero, Bot), Bot);
+            mp.insert((Zero, Zero), Zero);
+            mp.insert((Zero, Neg), Pos);
+            mp.insert((Zero, Pos), Neg);
+            mp.insert((Zero, Top), Top);
+
+            mp.insert((Neg, Bot), Bot);
+            mp.insert((Neg, Zero), Neg);
+            mp.insert((Neg, Neg), Top);
+            mp.insert((Neg, Pos), Neg);
+            mp.insert((Neg, Top), Top);
+
+            mp.insert((Pos, Bot), Bot);
+            mp.insert((Pos, Zero), Pos);
+            mp.insert((Pos, Neg), Pos);
+            mp.insert((Pos, Pos), Top);
+            mp.insert((Pos, Top), Top);
+
+            mp.insert((Top, Bot), Bot);
+            mp.insert((Top, Zero), Top);
+            mp.insert((Top, Neg), Top);
+            mp.insert((Top, Pos), Top);
+            mp.insert((Top, Top), Top);
+            mp
+        });
+        mp[&(self, other)]
+    }
 }
 
 fn check_monotone(f: &dyn Fn(Sign, Sign) -> Sign) -> bool {
@@ -170,5 +211,6 @@ mod tests {
     #[test]
     fn test_sign_lattice() {
         assert!(check_monotone(&Sign::plus));
+        assert!(check_monotone(&Sign::minus));
     }
 }
