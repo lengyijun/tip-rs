@@ -208,7 +208,7 @@ pub enum AstNodeKind {
     While(While),
     Block(Block),
     Function(Function),
-    // AstNode::Function
+    // Vec<AstNode::Function>
     Program(Vec<AstNode>),
     Number(i32),
     Input,
