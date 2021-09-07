@@ -221,9 +221,6 @@ pub enum AstNodeKind {
     FunApp(FunApp),
     FieldAccess(FieldAccess),
     Expression(BinaryOp),
-    // only temporary
-    // Vec<AstNode::Id>
-    Vars(Vec<AstNode>),
 }
 
 // use Precedence Climbing Method to parse AstNode::Expression
@@ -302,6 +299,17 @@ fn pair_2_ids(pair: pest::iterators::Pair<Rule>) -> Vec<AstNode> {
     pair.into_inner().map(build_ast_from_expr).collect()
 }
 
+fn pair_2_vars(pair: pest::iterators::Pair<Rule>) -> Vec<AstNode> {
+    pair.into_inner()
+        .map(pair_2_ids)
+        .map(|x| {
+            // TODO not efficient here
+            x.into_iter()
+        })
+        .flatten()
+        .collect()
+}
+
 fn build_ast_from_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
     // dbg!(pair.as_str());
 
@@ -344,20 +352,6 @@ fn build_ast_from_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
                 }),
             }
         }
-        Rule::vars => AstNode {
-            line,
-            col,
-            kind: AstNodeKind::Vars(
-                pair.into_inner()
-                    .map(pair_2_ids)
-                    .map(|x| {
-                        // TODO not efficient here
-                        x.into_iter()
-                    })
-                    .flatten()
-                    .collect(),
-            ),
-        },
         Rule::output => {
             let mut pair = pair.into_inner();
             AstNode {
@@ -428,12 +422,7 @@ fn build_ast_from_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
             let mut pair = pair.into_inner();
             let name = pair.next().unwrap().as_str().to_string();
             let params = pair_2_ids(pair.next().unwrap());
-            let vars = Box::new(build_ast_from_expr(pair.next().unwrap()));
-            let vars = if let AstNodeKind::Vars(vars) = vars.kind {
-                vars
-            } else {
-                unreachable!();
-            };
+            let vars = pair_2_vars(pair.next().unwrap());
             let mut statements: Vec<AstNode> = pair.map(build_ast_from_expr).collect();
             let ret = Box::new(statements.pop().unwrap());
             AstNode {

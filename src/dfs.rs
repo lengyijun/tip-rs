@@ -17,10 +17,6 @@ pub trait Dfs {
             AstNodeKind::DerefWrite(DerefWrite { ref expr }) => {
                 self.dfs(expr);
             }
-            AstNodeKind::Vars(_) => {
-                // Vars is temporary
-                unreachable!();
-            }
             AstNodeKind::Output(Output { ref expr }) => {
                 self.dfs(expr);
             }
