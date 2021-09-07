@@ -10,10 +10,6 @@ pub trait Dfs {
         }
         match node.kind {
             AstNodeKind::Id(_) => {}
-            AstNodeKind::Ids(_) => {
-                // Ids is temporary
-                unreachable!();
-            }
             AstNodeKind::DirectFieldWrite(_) => {}
             AstNodeKind::IndirectFieldWrite(IndirectFieldWrite { ref expr, .. }) => {
                 self.dfs(expr);

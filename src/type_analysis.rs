@@ -226,9 +226,6 @@ impl Dfs for TypeAnalysis {
                     }
                 }
             }
-            AstNodeKind::Ids(_) => {
-                unreachable!();
-            }
             AstNodeKind::Vars(_) => {
                 unreachable!();
             }

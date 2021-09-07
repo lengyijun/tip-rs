@@ -221,10 +221,6 @@ pub enum AstNodeKind {
     FunApp(FunApp),
     FieldAccess(FieldAccess),
     Expression(BinaryOp),
-    // only temporary, for convenient
-    // will not be used in DFS
-    // Vec<AstNode::Id>
-    Ids(Vec<AstNode>),
     // only temporary
     // Vec<AstNode::Id>
     Vars(Vec<AstNode>),
@@ -302,6 +298,10 @@ fn parse_expression(expression: Pairs<Rule>) -> AstNode {
     )
 }
 
+fn pair_2_ids(pair: pest::iterators::Pair<Rule>) -> Vec<AstNode> {
+    pair.into_inner().map(build_ast_from_expr).collect()
+}
+
 fn build_ast_from_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
     // dbg!(pair.as_str());
 
@@ -311,11 +311,6 @@ fn build_ast_from_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
             kind: AstNodeKind::Id(pair.as_str().into()),
             line,
             col,
-        },
-        Rule::ids => AstNode {
-            line,
-            col,
-            kind: AstNodeKind::Ids(pair.into_inner().map(build_ast_from_expr).collect()),
         },
         Rule::directFieldWrite => {
             let mut pair = pair.into_inner();
@@ -354,13 +349,10 @@ fn build_ast_from_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
             col,
             kind: AstNodeKind::Vars(
                 pair.into_inner()
-                    .map(build_ast_from_expr)
+                    .map(pair_2_ids)
                     .map(|x| {
-                        if let AstNodeKind::Ids(y) = x.kind {
-                            y.into_iter()
-                        } else {
-                            unreachable!();
-                        }
+                        // TODO not efficient here
+                        x.into_iter()
                     })
                     .flatten()
                     .collect(),
@@ -435,12 +427,7 @@ fn build_ast_from_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
         Rule::function => {
             let mut pair = pair.into_inner();
             let name = pair.next().unwrap().as_str().to_string();
-            let ids = Box::new(build_ast_from_expr(pair.next().unwrap()));
-            let params = if let AstNodeKind::Ids(params) = ids.kind {
-                params
-            } else {
-                unreachable!();
-            };
+            let params = pair_2_ids(pair.next().unwrap());
             let vars = Box::new(build_ast_from_expr(pair.next().unwrap()));
             let vars = if let AstNodeKind::Vars(vars) = vars.kind {
                 vars
