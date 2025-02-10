@@ -1,0 +1,2 @@
+* How to connect two `AstNode`
+The analyzer do it for you.

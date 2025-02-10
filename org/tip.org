@@ -1,0 +1,2 @@
+no early return. return must be the last statement. 
+In a function, there is only one return.
